@@ -284,7 +284,7 @@ We would like to read these data into R, and combine them into a single data fra
 
 
 ```{r crabs, warning = FALSE, comment=FALSE, message=FALSE}
-files <- dir(path = "../../biostats2/2020/data/crabs", 
+files <- dir(path = "data/crabs", 
              pattern = "*.csv", 
              full.names = TRUE)
 #files
