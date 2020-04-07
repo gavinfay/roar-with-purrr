@@ -419,9 +419,6 @@ p1 <- ggplot(ssl_bootmod) +
        x = "") +
   NULL #})
 p1
-
-
-
 ```
 
 
