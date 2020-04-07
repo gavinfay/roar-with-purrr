@@ -333,6 +333,14 @@ ssl_long <- ssl %>%
   na.omit()
 ssl_long
 
+ssl_models <- ssl_long %>% 
+  filter(year >= 2000,
+         count > 0) %>%
+  mutate(log_count = log(count),
+         year2 = year-2000) %>% 
+  I()
+ssl_models
+
 ```
 
 ## residual bootstrapping
