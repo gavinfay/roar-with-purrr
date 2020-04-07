@@ -433,12 +433,27 @@ We would like to compare models that use different combinations of these variabl
 
 
 ```{r}
-
 bsb <- read_csv("data/neus_bts.csv") %>% 
   filter(comname == "BLACK SEA BASS",
          biomass > 0,
          season == "SPRING")
 bsb
+
+terms <- rev(names(bsb)[c(5:8)])
+parts <- str_c("s(",terms,")")
+forms <- map(accumulate(parts, paste, sep = " + ", .init = "log(biomass) ~ factor(year)"), as.formula)
+
+bsb_gams <- enframe(forms, name = "id", value = "formula") %>%
+  mutate(model = modelr::fit_with(bsb, mgcv::gam, .formulas = forms),
+         aic = map_dbl(model, AIC),
+         p1 = map(model, gratia::draw))
+bsb_gams2 <- bsb_gams %>% 
+  slice(which.min(bsb_gams$aic)) %>% 
+  #mutate(p1 = map(model, gratia::draw)) %>% 
+  #print(p1) %>% 
+  I()
+print(bsb_gams2$p1)
+
 ```
 
 
