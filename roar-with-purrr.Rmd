@@ -379,9 +379,14 @@ tosample <- ssl_boot %>%
   select(sitename, resid) %>% 
   group_by(sitename)
 resamples <-
-   map_dfr(seq_len(nboot),~sample_frac(tosample, size = 1, replace = TRUE))
+   map_dfr(seq_len(nboot),~sample_frac(tosample, size = 1, replace = TRUE)) %>%
+   ungroup() %>% 
+   mutate(replicate = rep(1:nboot, each = nrow(tosample)))
 resamples
-  
+ssl_boot %>% 
+  map_dfr(seq_len(nboot),~I(.))
+ssl_boot
+
 ```
 
 
