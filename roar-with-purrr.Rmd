@@ -385,7 +385,7 @@ resamples <-
 resamples
 ssl_bootmod <- #ssl_boot %>% 
   #ungroup() %>% 
-  map_dfr(seq_len(nboot),~I(ssl_boot))
+  map_dfr(1:nboot,~I(ssl_boot))
 ssl_bootmod
 
 ```
