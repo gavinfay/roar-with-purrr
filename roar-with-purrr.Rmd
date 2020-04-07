@@ -412,7 +412,7 @@ ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
 p1 <- ggplot(ssl_bootmod) +
   aes(x = fct_reorder(sitename, med), y = med) +
   geom_point() +
-  geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) +
+  geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) + #add the bootstrap confidence interval
   coord_flip() +
   theme_minimal() +
   labs(y = "slope",
