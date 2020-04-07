@@ -375,7 +375,13 @@ ssl_boot <- ssl_models %>%
   unnest(cols=c(tbl)) %>% 
   rename("resid" = ".resid") %>% 
   I()
-ssl_boot
+tosample <- ssl_boot %>% 
+  select(sitename, resid) %>% 
+  group_by(sitename)
+resamples <-
+   map_dfr(seq_len(nboot),~sample_frac(tosample, size = 1, replace = TRUE))
+resamples
+  
 ```
 
 
