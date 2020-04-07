@@ -350,7 +350,7 @@ a. Compute the mean of every column in `mtcars`.
 b. Determine the type of each column in `nycflights13::flights`.  
 c. Compute the number of unique values in each column of `iris`.  
 
-<div class="countdown" id="timer_5e8c628c" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="timer_5e8c61f6" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 
@@ -375,9 +375,9 @@ map2(mu, sigma, rnorm, n = 5) %&gt;% str()
 
 ```
 ## List of 3
-##  $ : num [1:5] 3.53 6.63 4.72 3.75 5.11
-##  $ : num [1:5] 3.46 14.72 16.49 9.2 6.93
-##  $ : num [1:5] -9.67 12.33 4.75 -5.95 10.05
+##  $ : num [1:5] 4.75 6.12 5.47 5.79 6.81
+##  $ : num [1:5] 8.9 12.8 10.97 13.71 8.43
+##  $ : num [1:5] -0.0534 -7.9839 -20.1775 17.0253 -13.0054
 ```
 
 ![](figs/map2.png)
@@ -402,9 +402,9 @@ args1 %&gt;%
 
 ```
 ## List of 3
-##  $ : num 6.09
-##  $ : num [1:3] 11.94 4.62 16.06
-##  $ : num [1:5] -6.607 -26.356 -6.868 -0.553 -17.571
+##  $ : num 3.91
+##  $ : num [1:3] 11.01 16.4 9.77
+##  $ : num [1:5] 11.26 -18.63 -4.99 19.11 7.68
 ```
 
 Safest to use named arguments with `pmap`, as it will do positional matching if not.  
