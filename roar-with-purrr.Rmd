@@ -466,9 +466,19 @@ We want to project population dynamics forward in time given uncertainty in futu
 
 We want to do this lots of times to quantify the risk of extinction.  
 
+initial population size is 7500, grows at 5% per year but there is annual process error with std. deviation 0.1
 ```{r}
 nsim <- 10
 nyr <- 100
 sd_proc <- 0.1
 initN <- 7500
+# create our list of time series for the process errors
+errors <- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc))
+
+# population model
+pop_update <- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err)
+
+# population projection for each time series of process errors
+pop2 <- map_dfc(errors,~accumulate(., pop_update, .init = initN, lambda = 1.05))
+pop2
 ```
