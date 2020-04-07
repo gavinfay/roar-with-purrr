@@ -397,17 +397,7 @@ ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
 
 ssl_bootmod
 
-
-ssl_models
-ssl_models$model[[1]]
-  #lm(log_count ~ year2, data = ssl_models)
-
-ggplot(ssl_models) +
-  aes(x = slope) +
-  geom_histogram(col="white") +
-  theme_minimal()
-
-ggplot(ssl_models) +
+ggplot(ssl_bootmod) +
   aes(x = fct_reorder(sitename, slope), y= slope) +
   geom_point() +
   coord_flip() +
