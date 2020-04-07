@@ -398,7 +398,7 @@ ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
 ssl_bootmod
 
 ggplot(ssl_bootmod) +
-  aes(x = fct_reorder(sitename, slope), y= slope) +
+  aes(x = fct_reorder(sitename, median(slope)), y= slope) +
   geom_point() +
   coord_flip() +
   theme_minimal()
