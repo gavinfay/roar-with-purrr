@@ -339,6 +339,33 @@ countdown(minutes = 5)
 
 ---
 
+## Exercise 1
+
+Write code that uses one of the map functions to:  
+
+a. Compute the mean of every column in `mtcars`.  
+```{r}
+map_dbl(mtcars, mean)
+```
+b. Determine the type of each column in `nycflights13::flights`.  
+```{r}
+map_chr(nycflights13::flights, typeof)
+```
+
+---
+
+## Exercise 1
+
+Write code that uses one of the map functions to:  
+
+c. Compute the number of unique values in each column of `iris`.  
+```{r}
+map_int(iris, ~length(unique(.)))
+map_int(iris, n_distinct)
+```
+
+---
+
 ## Extending to multiple input lists
 
 `map2` allows you to map over two sets of inputs.  
@@ -436,68 +463,79 @@ accumulate(letters[1:10], paste, sep = "+")
 
 ---
 
-## Crab example, switch to RStudio
+## Crab example
 
-We have data from several years of crab surveys.  
+We have data from several years of crab surveys with counts of _cancer_ & _carcinus_ crabs at numerous sites.      
 
 The data for each year is contained in separate ".csv" files.  
 
 We would like to read these data into R, and combine them into a single data frame so we can inspect and plot them.  
+For example, we might be interested in the co-occurrence of the two crabs.  
 
 ---
 
-<!-- --- -->
+## Crab example
 
-<!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} -->
-<!-- files <- dir(path = "data/crabs",  -->
-<!--              pattern = "*.csv",  -->
-<!--              full.names = TRUE) -->
-<!-- files -->
-<!-- ``` -->
+```{r warning = FALSE, comment=FALSE, message=FALSE}
+files <- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+files
+```
 
-<!-- --- -->
+---
 
-<!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} -->
-<!-- files <- dir(path = "data/crabs",  -->
-<!--              pattern = "*.csv",  -->
-<!--              full.names = TRUE) -->
-<!-- #files -->
-<!-- crab_data <- map_df(files, read_csv) %>%  -->
-<!--   group_by(year, site) %>% -->
-<!--   I() -->
-<!-- crab_data -->
-<!-- ``` -->
+## Crab example
 
-<!-- --- -->
+```{r warning = FALSE, comment=FALSE, message=FALSE}
+files <- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+#files
+crab_data <- map_df(files, read_csv) %>%
+  group_by(year, site) %>%
+  I()
+crab_data
+```
 
-<!-- .pull-left[ -->
-<!-- ```{r crabs, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'} -->
-<!-- files <- dir(path = "data/crabs",  -->
-<!--              pattern = "*.csv",  -->
-<!--              full.names = TRUE) -->
-<!-- #files -->
-<!-- crab_data <- map_df(files, read_csv) %>%  -->
-<!--   group_by(year, site) %>% -->
-<!--   I() -->
-<!-- #crab_data -->
-<!-- crab_plot <- ggplot(crab_data) + -->
-<!--   aes(x = carcinus,  -->
-<!--       y = cancer,  -->
-<!--       group = site) + -->
-<!--   geom_point() + -->
-<!--   facet_wrap(~site) + -->
-<!--   theme_minimal() + -->
-<!--   NULL -->
-<!-- crab_plot -->
-<!-- ``` -->
-<!-- ] -->
+---
 
-<!-- -- -->
+## Crab example
 
-<!-- .pull-right[ -->
-<!-- ```{r ref.label= 'crabs', echo = FALSE, retina = 3, message= FALSE} -->
-<!-- ``` -->
-<!-- ] -->
+.pull-left[
+```{r crabs, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'}
+files <- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+#files
+crab_data <- map_df(files, read_csv) %>%
+  group_by(year, site) %>%
+  I()
+#crab_data
+crab_plot <- ggplot(crab_data) +
+  aes(x = carcinus,
+      y = cancer,
+      group = site) +
+  geom_point() +
+  facet_wrap(~site) +
+  theme_minimal() +
+  NULL
+crab_plot
+```
+]
+
+--
+
+.pull-right[
+```{r ref.label= 'crabs', echo = FALSE, retina = 3, message= FALSE}
+```
+]
+
+.footnote[
+data from [github.com/lockedata/datasauRus]("https://github.com/lockedata/datasauRus")
+]
+
+---
 
 ## Problem 2  
 
@@ -516,17 +554,338 @@ We want to obtain confidence intervals of the slope estimates using bootstrappin
 
 ---
 
-## Problem 3  
+### read in data and make it tidy
 
-We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+.pull-left[
+```{r ssl1, warning = FALSE, results = 'hide', comment=FALSE, message=FALSE, fig.show = 'hide'}
+ssl <- read_csv("data/SSLpupcounts.csv")
+ssl_long <- ssl %>%
+  pivot_longer(names_to = "year",  #<<
+               values_to = "count",  #<<
+               -sitename) %>%  #<<
+  na.omit()
+ssl_long
+```
+]
 
-We have many possible variables.  
+--
 
-We would like to compare models that use different combinations of these variables.  
+.pull-right[
+```{r ref.label= 'ssl1', echo = FALSE, retina = 3, message= FALSE}
+ssl_long
+```
+]
 
 ---
 
-## Problem 4
+### Look at annual change in pup counts since 2000
+
+.pull-left[
+```{r ssl2, warning = FALSE, results = 'hide', comment=FALSE, message=FALSE, fig.show = 'hide'}
+ssl_models <- ssl_long %>%
+  group_by(sitename) %>%
+  filter(count > 0,
+         year >= 2000) %>%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %>%
+  nest() %>%   #<<
+  I()
+ssl_models
+```
+]
+
+--
+
+.pull-right[
+```{r ref.label= 'ssl2', echo = FALSE, retina = 3, message= FALSE}
+ssl_models
+```
+]
+
+`ssl_models` contains a row for each rookery, the `data` variable contains the dataset for each rookery.  
+
+---
+
+Use `map` to fit the model of `log(count)~year` for each of the elements in `data`.  
+Then pull out the estimates for the slopes (rate of increase).  
+
+```{r ssl3, warning = FALSE, results = 'hide', comment=FALSE, message=FALSE, fig.show = 'hide'}
+ssl_models <- ssl_long %>%
+  group_by(sitename) %>%
+  filter(count > 0,
+         year >= 2000) %>%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %>%
+  nest() %>%
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% #<<
+  mutate(coef = map(model, coef), #<<
+         slope = map_dbl(coef, pluck, 2)) %>% #<<
+  I()
+ssl_models
+```
+
+```{r ref.label= 'ssl3', echo = FALSE, retina = 3, message= FALSE}
+ssl_models
+```
+
+---
+
+Plot the estimates for the rates of increase (slopes).  
+
+.pull-left[
+```{r ssl4, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'}
+ssl_models <- ssl_long %>%
+  group_by(sitename) %>%
+  filter(count > 0,
+         year >= 2000) %>%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %>%
+  nest() %>%
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% 
+  mutate(coef = map(model, coef),
+         slope = map_dbl(coef, pluck, 2)) %>% 
+  I()
+ssl_models %>%
+  ggplot() +
+  aes(x = fct_reorder(sitename, slope), y = slope) +
+  geom_point() +
+  coord_flip() +
+  NULL
+```
+]
+
+.pull-right[
+```{r ref.label= 'ssl4', echo = FALSE, retina = 3, message= FALSE}
+```
+]
+
+Pup production increasing at many sites but declining at some.  
+(some sites have very few counts)  
+
+.footnote[
+data from [NOAA Fisheries National Marine Mammal Lab]("https://www.fisheries.noaa.gov/alaska/marine-mammal-protection/steller-sea-lion-data")
+]
+---
+
+We want to obtain confidence intervals of the slope estimates by performing residual bootstrapping.  
+Instead of resampling the data (which would destroy the relationship with year), we resample the residuals from the initial models.  
+
+```{r}
+nboot <- 100
+# first extract a table of fitted values and residuals using augment
+ssl_boot <- ssl_models %>%
+  mutate(tbl = map(model, broom::augment)) %>% 
+  select(sitename, tbl) %>% 
+  unnest(cols=c(tbl)) %>% 
+  rename("resid" = ".resid") %>% 
+  I()
+ssl_boot
+```
+
+---
+
+We'll do resampling from the residuals for each year within each rookery.  
+Rather than getting complicated with uber-nested lists, we'll use `sample_frac()` to do the resamples.  
+
+```{r}
+tosample <- ssl_boot %>% 
+  select(sitename, resid) %>% 
+  group_by(sitename)
+tosample
+```
+
+---
+
+We'll do resampling from the residuals for each year within each rookery.  
+Rather than getting complicated with uber-nested lists, we'll use `sample_frac()` to do the resamples.  
+
+```{r}
+tosample <- ssl_boot %>% 
+  select(sitename, resid) %>% 
+  group_by(sitename)
+#tosample
+resamples <-
+   map_dfr(seq_len(nboot),~sample_frac(tosample, size = 1, replace = TRUE)) %>% #<<
+   ungroup() %>% 
+   mutate(replicate = rep(1:nboot, each = nrow(tosample)))
+resamples
+```
+
+---
+
+`resamples` contains our bootstraps.  
+Let's append them to the data frame so we can compute the new data and re-fit the models for each case.  
+
+```{r}
+ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%  #<<
+  select(-resid) %>% 
+  bind_cols(resamples) %>%  #<<
+  mutate(log_count = .fitted + resid) %>% 
+  group_by(sitename, replicate) %>% 
+  nest() 
+ssl_bootmod
+```
+
+We now have a data frame with a row for each site & replicate
+
+---
+
+We now have a data frame with a row for each site & replicate.  
+We can use the same code as before to fit the (5,300) models.  
+
+```{r}
+ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%  
+  select(-resid) %>% 
+  bind_cols(resamples) %>% 
+  mutate(log_count = .fitted + resid) %>% 
+  group_by(sitename, replicate) %>% 
+  nest() %>%  
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>%  #<<
+  mutate(coef = map(model, coef)) %>%  #<<
+  mutate(slope = map_dbl(coef, pluck, 2)) %>%  #<<
+    ungroup()
+```
+
+---
+
+We now have a data frame with a row for each site & replicate.  
+We can use the same code as before to fit the (5,300) models.  
+
+```{r}
+ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%  
+  select(-resid) %>% 
+  bind_cols(resamples) %>%  
+  mutate(log_count = .fitted + resid) %>% 
+  group_by(sitename, replicate) %>% 
+  nest() %>%  
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% 
+  mutate(coef = map(model, coef)) %>%  
+  mutate(slope = map_dbl(coef, pluck, 2)) %>%  
+    ungroup() %>% 
+  group_by(sitename) %>%    #<<
+  mutate(med = median(slope), #<<
+         lower = quantile(slope, 0.025), #<<
+         upper = quantile(slope, 0.975)) %>%  #<<
+  I()
+ssl_bootmod
+```
+
+---
+
+
+Now plot summaries of the bootstrapped estimates for the slopes.    
+Intervals are the distribution of 100 estimates of the slope for each rookery.   
+
+.pull-left[
+```{r boot1, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'}
+ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%  
+  select(-resid) %>% 
+  bind_cols(resamples) %>%  
+  mutate(log_count = .fitted + resid) %>% 
+  group_by(sitename, replicate) %>% 
+  nest() %>%  
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% 
+  mutate(coef = map(model, coef)) %>%  
+  mutate(slope = map_dbl(coef, pluck, 2)) %>%  
+    ungroup() %>% 
+  group_by(sitename) %>%    
+  mutate(med = median(slope), 
+         lower = quantile(slope, 0.025), 
+         upper = quantile(slope, 0.975)) %>%  
+  I()
+p1 <- ggplot(ssl_bootmod) +
+  aes(x = fct_reorder(sitename, med), y = med) +  #<<
+  geom_point() +
+  geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) + #<<
+  coord_flip() +
+  theme_minimal() +
+  labs(y = "slope",
+       x = "") +
+  NULL
+p1
+```
+]
+
+.pull-right[
+```{r ref.label= 'boot1', echo = FALSE, retina = 3, message= FALSE}
+```
+]
+
+
+---
+
+### Problem 3: Fishery CPUE  
+
+We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+Want to compare models that use different combinations of these variables.  
+Let's look at NMFS Northeast US spring bottom trawl survey data for black sea bass.  
+We'll fit a few GAMs of catch per tow with different numbers of covariates.  
+
+.pull-left[
+```{r bsb, warning = FALSE, results = 'hide', comment=FALSE, message=FALSE, fig.show = 'hide'}
+bsb <- read_csv("data/neus_bts.csv") %>% 
+  filter(comname == "BLACK SEA BASS",
+         biomass > 0,
+         season == "SPRING")
+bsb
+```
+]
+
+.pull-right[
+```{r ref.label= 'bsb', echo = FALSE, retina = 3, message= FALSE}
+bsb
+```
+]
+
+.footnote[
+data from [https://oceanadapt.rutgers.edu/]("https://oceanadapt.rutgers.edu/")
+]
+
+---
+
+First make a list of model formulae using `accumulate()`  
+
+```{r}
+terms <- rev(names(bsb)[c(5:8)])
+parts <- str_c("s(",terms,")")
+forms <- map(accumulate(parts, 
+                        paste, 
+                        sep = " + ", 
+                        .init = "log(biomass) ~ factor(year)"),
+             as.formula)
+forms
+```
+
+---
+
+Use `modelr::fitwith()` to fit `gam()` for each formula
+
+.pull-left[
+```{r}
+bsb_gams <- enframe(forms, name = "id", 
+                    value = "formula") %>%
+  mutate(model = modelr::fit_with(bsb, 
+                                  mgcv::gam, 
+                                  .formulas = forms),
+         aic = map_dbl(model, AIC),
+         p1 = map(model, gratia::draw))
+bsb_gams
+```
+]
+
+--
+
+.pull-right[
+```{r}
+best_gam <- bsb_gams %>% 
+  slice(which.min(bsb_gams$aic))
+print(best_gam$p1)
+```
+]
+
+---
+
+### Problem 4: Population Viability Analysis
 
 Status for endangered species are often based on a risk evaluation of population projections.  
 
@@ -534,128 +893,36 @@ We want to project population dynamics forward in time given uncertainty in futu
 
 We want to do this lots of times to quantify the risk of extinction.  
 
+Initial population size is 7500, declines at 2% per year but there is annual (lognormal) process error with std. deviation 0.1    
 
-<!-- --- -->
+i.e.
+$N_{t+1} = \lambda N_{t} e^{\epsilon_{t}}$  
 
-<!-- ```{r} -->
+$\epsilon_t \sim N(0,\sigma_{\epsilon}^2)$
 
-<!-- ssl <- read_csv("data/SSLpupcounts.csv") -->
-<!-- ssl -->
-<!-- ssl_long <- ssl %>%  -->
-<!--   pivot_longer(names_to = "year", -->
-<!--                values_to = "count", -->
-<!--                -sitename) %>%  -->
-<!--   na.omit() -->
-<!-- ssl_long -->
+---
 
-<!-- ssl_models <- ssl_long %>%  -->
-<!--   group_by(sitename) %>%  -->
-<!--   filter(count > 0, -->
-<!--          year >= 2000) %>%  -->
-<!--   mutate(year2 = as.numeric(year)-2000, -->
-<!--          log_count = log(count)) %>%  -->
-<!--   nest() %>%  -->
-<!-- #str(ssl_models$data[1]) -->
-<!--   mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>%  -->
-<!--   mutate(coef = map(model, coef), -->
-<!--          slope = map_dbl(coef, pluck, 2)) %>% -->
-<!--   I() -->
-<!-- ssl_models %>%  -->
-<!--   ggplot() + -->
-<!--   aes(x = fct_reorder(sitename, slope), y = slope) + -->
-<!--   geom_point() + -->
-<!--   coord_flip() + -->
-<!--   NULL -->
+```{r}
+nsim <- 100
+nyr <- 100
+lambda = 0.98
+sd_proc <- 0.1
+initN <- 7500
+# create our list of time series for the process errors
+errors <- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc))
 
-<!-- ``` -->
+# population model
+pop_update <- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err)
 
-<!-- ```{r} -->
-<!-- system.time({ -->
-<!-- nboot <- 100 -->
-<!-- ssl_boot <- ssl_models %>% -->
-<!--   mutate(tbl = map(model, augment)) %>%  -->
-<!-- #bob <- ssl_boot %>%  -->
-<!--   mutate(boot = map(tbl, specify, response = .resid)) %>%  -->
-<!--   mutate(samples = map(boot, generate, reps = nboot, type = "bootstrap")) %>%  -->
-<!--   mutate(nd2 = map(tbl, ~map_dfr(.x = seq_len(nboot),function(x) I(.))), -->
-<!--          nd2 = map(nd2, select,-.resid), -->
-<!--          nd2 = map2(nd2, samples, bind_cols), -->
-<!--          nd2 = map(nd2, mutate, log_count = .fitted + .resid), -->
-<!--          nd3 = map(nd2, function(x) {group_by(x, replicate) %>% nest()})) %>%  -->
-<!--   mutate(bootmod = map(nd3, ~mutate(., slope = map_dbl(data, ~coef(lm(log_count~year2, data = .))[2]))), -->
-<!--          quantboot = map(bootmod, ~quantile(.$slope, probs=c(0.025,0.5,0.975)))) %>% -->
-<!--   unnest(quantboot) %>%  -->
-<!--   mutate(quant = c("lower","med","upper")) %>%  -->
-<!--   pivot_wider(names_from = quant, -->
-<!--               values_from = quantboot) %>%  -->
-<!--   I() -->
-
-<!-- p1 <- ggplot(ssl_boot) + -->
-<!--   aes(x = fct_reorder(sitename, med), y = med) + -->
-<!--   geom_point() + -->
-<!--   geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) + -->
-<!--   coord_flip() + -->
-<!--   theme_minimal() + -->
-<!--   labs(y = "slope", -->
-<!--        x = "") + -->
-<!--   NULL}) -->
-<!-- p1 -->
-<!-- ``` -->
-
-
-<!-- --- -->
-
-<!-- ```{r} -->
-
-<!-- bsb <- read_csv("data/neus_bts.csv") %>%  -->
-<!--   filter(comname == "BLACK SEA BASS", -->
-<!--          biomass > 0, -->
-<!--          season == "SPRING") -->
-<!-- bsb -->
-
-<!-- terms <- rev(names(bsb)[c(5:8)]) -->
-<!-- parts <- str_c("s(",terms,")") -->
-<!-- forms <- map(accumulate(parts, paste, sep = " + ", .init = "log(biomass) ~ factor(year)"), as.formula) -->
-
-<!-- bsb_gams <- enframe(forms, name = "id", value = "formula") %>% -->
-<!--   mutate(model = modelr::fit_with(bsb, mgcv::gam, .formulas = forms), -->
-<!--          aic = map_dbl(model, AIC), -->
-<!--          p1 = map(model, gratia::draw)) -->
-<!-- bsb_gams2 <- bsb_gams %>%  -->
-<!--   slice(which.min(bsb_gams$aic)) %>%  -->
-<!--   #mutate(p1 = map(model, gratia::draw)) %>%  -->
-<!--   #print(p1) %>%  -->
-<!--   I() -->
-<!-- print(bsb_gams2$p1) -->
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-<!-- nsim <- 10 -->
-<!-- nyr <- 100 -->
-<!-- sd_proc <- 0.1 -->
-<!-- errors <- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc)) -->
-<!-- pop_update <- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err) -->
-<!-- h <- rep(10,10) -->
-<!-- initN <- 7500 -->
-<!-- pop2 <- map(errors,~accumulate(., pop_update, .init = initN, lambda = 1.05)) -->
-<!-- ``` -->
-
-<!-- If there are 7,500 snow leopards in year 2018 and they are declining at 5% per year, in what year will they fall below 500 individuals? -->
-
-<!-- ```{r prompt=TRUE,comment='',collapse=TRUE} -->
-<!-- leopard.loop <- function(N, year=2018) { -->
-<!--   while (N>=500) { -->
-<!--     N <- N*0.95 -->
-<!--     year <- year+1 -->
-<!--   } -->
-<!--   return(year) -->
-<!-- } -->
-<!-- leopard.loop(N=7500) -->
-<!-- ``` -->
-
-<!-- Pro-tip: when you end up in an infinite loop with no stopping point, press `<ESC>` to stop it running! -->
-
-
+# population projection for each time series of process errors
+pop_proj <- map(errors,~accumulate(., pop_update, .init = initN, lambda = lambda)) %>% 
+  enframe() %>% 
+  rename(replicate = name) %>%
+  mutate(final_n = map_dbl(value, pluck, nyr+1),
+         drops_below_500 = map_lgl(value, ~any(.<500)))
+p500 <- sum(pop_proj$drops_below_500)/nsim
+p500
+pop_proj
+```
 
 

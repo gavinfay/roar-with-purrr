@@ -354,9 +354,70 @@ a. Compute the mean of every column in `mtcars`.
 b. Determine the type of each column in `nycflights13::flights`.  
 c. Compute the number of unique values in each column of `iris`.  
 
-<div class="countdown" id="timer_5e8cad79" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="timer_5e8cec84" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
+
+---
+
+## Exercise 1
+
+Write code that uses one of the map functions to:  
+
+a. Compute the mean of every column in `mtcars`.  
+
+```r
+map_dbl(mtcars, mean)
+```
+
+```
+##        mpg        cyl       disp         hp       drat         wt       qsec 
+##  20.090625   6.187500 230.721875 146.687500   3.596563   3.217250  17.848750 
+##         vs         am       gear       carb 
+##   0.437500   0.406250   3.687500   2.812500
+```
+b. Determine the type of each column in `nycflights13::flights`.  
+
+```r
+map_chr(nycflights13::flights, typeof)
+```
+
+```
+##           year          month            day       dep_time sched_dep_time 
+##      "integer"      "integer"      "integer"      "integer"      "integer" 
+##      dep_delay       arr_time sched_arr_time      arr_delay        carrier 
+##       "double"      "integer"      "integer"       "double"    "character" 
+##         flight        tailnum         origin           dest       air_time 
+##      "integer"    "character"    "character"    "character"       "double" 
+##       distance           hour         minute      time_hour 
+##       "double"       "double"       "double"       "double"
+```
+
+---
+
+## Exercise 1
+
+Write code that uses one of the map functions to:  
+
+c. Compute the number of unique values in each column of `iris`.  
+
+```r
+map_int(iris, ~length(unique(.)))
+```
+
+```
+## Sepal.Length  Sepal.Width Petal.Length  Petal.Width      Species 
+##           35           23           43           22            3
+```
+
+```r
+map_int(iris, n_distinct)
+```
+
+```
+## Sepal.Length  Sepal.Width Petal.Length  Petal.Width      Species 
+##           35           23           43           22            3
+```
 
 ---
 
@@ -379,9 +440,9 @@ map2(mu, sigma, rnorm, n = 5) %&gt;% str()
 
 ```
 ## List of 3
-##  $ : num [1:5] 5.09 6.93 4.79 5.98 6.29
-##  $ : num [1:5] 5.58 16.38 -3.71 13.1 13.68
-##  $ : num [1:5] 5.73 -23.64 -10.95 -3.61 -11.33
+##  $ : num [1:5] 3.42 5.62 6.23 6.69 4.86
+##  $ : num [1:5] 10.01 14.49 5.54 14.88 22.55
+##  $ : num [1:5] -19.52 5.26 -4.05 -7.57 1.03
 ```
 
 ![](figs/map2.png)
@@ -406,9 +467,9 @@ args1 %&gt;%
 
 ```
 ## List of 3
-##  $ : num 4.07
-##  $ : num [1:3] 14.98 10.34 6.41
-##  $ : num [1:5] -11.14 2.98 -11.25 -14.58 6.37
+##  $ : num 3.74
+##  $ : num [1:3] 13.4 6.3 10.1
+##  $ : num [1:5] -1.83 -5.73 -13.51 -16.31 -7.46
 ```
 
 Safest to use named arguments with `pmap`, as it will do positional matching if not.  
@@ -502,68 +563,112 @@ accumulate(letters[1:10], paste, sep = "+")
 
 ---
 
-## Crab example, switch to RStudio
+## Crab example
 
-We have data from several years of crab surveys.  
+We have data from several years of crab surveys with counts of _cancer_ &amp; _carcinus_ crabs at numerous sites.      
 
 The data for each year is contained in separate ".csv" files.  
 
 We would like to read these data into R, and combine them into a single data frame so we can inspect and plot them.  
+For example, we might be interested in the co-occurrence of the two crabs.  
 
 ---
 
-&lt;!-- --- --&gt;
+## Crab example
 
-&lt;!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} --&gt;
-&lt;!-- files &lt;- dir(path = "data/crabs",  --&gt;
-&lt;!--              pattern = "*.csv",  --&gt;
-&lt;!--              full.names = TRUE) --&gt;
-&lt;!-- files --&gt;
-&lt;!-- ``` --&gt;
 
-&lt;!-- --- --&gt;
+```r
+files &lt;- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+files
+```
 
-&lt;!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} --&gt;
-&lt;!-- files &lt;- dir(path = "data/crabs",  --&gt;
-&lt;!--              pattern = "*.csv",  --&gt;
-&lt;!--              full.names = TRUE) --&gt;
-&lt;!-- #files --&gt;
-&lt;!-- crab_data &lt;- map_df(files, read_csv) %&gt;%  --&gt;
-&lt;!--   group_by(year, site) %&gt;% --&gt;
-&lt;!--   I() --&gt;
-&lt;!-- crab_data --&gt;
-&lt;!-- ``` --&gt;
+```
+FALSE  [1] "data/crabs/CRABS_2001.csv" "data/crabs/CRABS_2002.csv"
+FALSE  [3] "data/crabs/CRABS_2003.csv" "data/crabs/CRABS_2004.csv"
+FALSE  [5] "data/crabs/CRABS_2005.csv" "data/crabs/CRABS_2006.csv"
+FALSE  [7] "data/crabs/CRABS_2007.csv" "data/crabs/CRABS_2008.csv"
+FALSE  [9] "data/crabs/CRABS_2009.csv" "data/crabs/CRABS_2010.csv"
+FALSE [11] "data/crabs/CRABS_2011.csv" "data/crabs/CRABS_2012.csv"
+FALSE [13] "data/crabs/CRABS_2013.csv" "data/crabs/CRABS_2014.csv"
+FALSE [15] "data/crabs/CRABS_2015.csv" "data/crabs/CRABS_2016.csv"
+FALSE [17] "data/crabs/CRABS_2017.csv" "data/crabs/CRABS_2018.csv"
+FALSE [19] "data/crabs/CRABS_2019.csv"
+```
 
-&lt;!-- --- --&gt;
+---
 
-&lt;!-- .pull-left[ --&gt;
-&lt;!-- ```{r crabs, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'} --&gt;
-&lt;!-- files &lt;- dir(path = "data/crabs",  --&gt;
-&lt;!--              pattern = "*.csv",  --&gt;
-&lt;!--              full.names = TRUE) --&gt;
-&lt;!-- #files --&gt;
-&lt;!-- crab_data &lt;- map_df(files, read_csv) %&gt;%  --&gt;
-&lt;!--   group_by(year, site) %&gt;% --&gt;
-&lt;!--   I() --&gt;
-&lt;!-- #crab_data --&gt;
-&lt;!-- crab_plot &lt;- ggplot(crab_data) + --&gt;
-&lt;!--   aes(x = carcinus,  --&gt;
-&lt;!--       y = cancer,  --&gt;
-&lt;!--       group = site) + --&gt;
-&lt;!--   geom_point() + --&gt;
-&lt;!--   facet_wrap(~site) + --&gt;
-&lt;!--   theme_minimal() + --&gt;
-&lt;!--   NULL --&gt;
-&lt;!-- crab_plot --&gt;
-&lt;!-- ``` --&gt;
-&lt;!-- ] --&gt;
+## Crab example
 
-&lt;!-- -- --&gt;
 
-&lt;!-- .pull-right[ --&gt;
-&lt;!-- ```{r ref.label= 'crabs', echo = FALSE, retina = 3, message= FALSE} --&gt;
-&lt;!-- ``` --&gt;
-&lt;!-- ] --&gt;
+```r
+files &lt;- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+#files
+crab_data &lt;- map_df(files, read_csv) %&gt;%
+  group_by(year, site) %&gt;%
+  I()
+crab_data
+```
+
+```
+FALSE # A tibble: 1,846 x 7
+FALSE # Groups:   year, site [247]
+FALSE     year  site month moon_phase      temperature cancer carcinus
+FALSE  * &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
+FALSE  1  2001     4     8 Waning crescent        81.4  66.8      79.7
+FALSE  2  2001     4     7 Last quarter           66.1  42.6      89.5
+FALSE  3  2001     4     7 Waxing crescent        79    25.3      64.1
+FALSE  4  2001     4     7 New                    76.6  18.3      58.7
+FALSE  5  2001     1     8 Full                   77.4  59.7      76.1
+FALSE  6  2001     1     7 First quarter          65.9  96.6      30.0
+FALSE  7  2001     1     8 Waxing gibbous         77.3  70.5      39.1
+FALSE  8  2001     1     9 New                    74.6   1.21     82.1
+FALSE  9  2001     1     6 Full                   68.1   0.51     33.3
+FALSE 10  2001     1     6 Last quarter           68.5  36.8      46.8
+FALSE # … with 1,836 more rows
+```
+
+---
+
+## Crab example
+
+.pull-left[
+
+```r
+files &lt;- dir(path = "data/crabs",
+             pattern = "*.csv",
+             full.names = TRUE)
+#files
+crab_data &lt;- map_df(files, read_csv) %&gt;%
+  group_by(year, site) %&gt;%
+  I()
+#crab_data
+crab_plot &lt;- ggplot(crab_data) +
+  aes(x = carcinus,
+      y = cancer,
+      group = site) +
+  geom_point() +
+  facet_wrap(~site) +
+  theme_minimal() +
+  NULL
+crab_plot
+```
+]
+
+--
+
+.pull-right[
+![](purrr-slides_files/figure-html/unnamed-chunk-28-1.png)&lt;!-- --&gt;
+]
+
+.footnote[
+data from [github.com/lockedata/datasauRus]("https://github.com/lockedata/datasauRus")
+]
+
+---
 
 ## Problem 2  
 
@@ -580,17 +685,545 @@ We want to obtain confidence intervals of the slope estimates using bootstrappin
 
 ---
 
-## Problem 3  
+### read in data and make it tidy
 
-We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+.pull-left[
 
-We have many possible variables.  
+```r
+ssl &lt;- read_csv("data/SSLpupcounts.csv")
+ssl_long &lt;- ssl %&gt;%
+* pivot_longer(names_to = "year",
+*              values_to = "count",
+*              -sitename) %&gt;%
+  na.omit()
+ssl_long
+```
+]
 
-We would like to compare models that use different combinations of these variables.  
+--
+
+.pull-right[
+
+```
+## # A tibble: 640 x 3
+##    sitename        year  count
+##    &lt;chr&gt;           &lt;chr&gt; &lt;dbl&gt;
+##  1 ADAK/LAKE POINT 1979    20 
+##  2 ADAK/LAKE POINT 2002   363 
+##  3 ADAK/LAKE POINT 2004   350 
+##  4 ADAK/LAKE POINT 2005   311 
+##  5 ADAK/LAKE POINT 2009   338.
+##  6 ADAK/LAKE POINT 2010   318.
+##  7 ADAK/LAKE POINT 2011   310.
+##  8 ADAK/LAKE POINT 2014   250 
+##  9 ADUGAK          1985   844 
+## 10 ADUGAK          1990   262 
+## # … with 630 more rows
+```
+]
 
 ---
 
-## Problem 4
+### Look at annual change in pup counts since 2000
+
+.pull-left[
+
+```r
+ssl_models &lt;- ssl_long %&gt;%
+  group_by(sitename) %&gt;%
+  filter(count &gt; 0,
+         year &gt;= 2000) %&gt;%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %&gt;%
+* nest() %&gt;%
+  I()
+ssl_models
+```
+]
+
+--
+
+.pull-right[
+
+```
+## # A tibble: 53 x 2
+## # Groups:   sitename [53]
+##    sitename             data             
+##  * &lt;chr&gt;                &lt;list&gt;           
+##  1 ADAK/LAKE POINT      &lt;tibble [7 × 4]&gt; 
+##  2 ADUGAK               &lt;tibble [8 × 4]&gt; 
+##  3 AGATTU/CAPE SABAK    &lt;tibble [10 × 4]&gt;
+##  4 AGATTU/GILLON POINT  &lt;tibble [8 × 4]&gt; 
+##  5 AKUN/BILLINGS HEAD   &lt;tibble [7 × 4]&gt; 
+##  6 AKUTAN/CAPE MORGAN   &lt;tibble [8 × 4]&gt; 
+##  7 AMCHITKA/COLUMN ROCK &lt;tibble [5 × 4]&gt; 
+##  8 ATKINS               &lt;tibble [9 × 4]&gt; 
+##  9 ATTU/CAPE WRANGELL   &lt;tibble [8 × 4]&gt; 
+## 10 AYUGADAK             &lt;tibble [7 × 4]&gt; 
+## # … with 43 more rows
+```
+]
+
+`ssl_models` contains a row for each rookery, the `data` variable contains the dataset for each rookery.  
+
+---
+
+Use `map` to fit the model of `log(count)~year` for each of the elements in `data`.  
+Then pull out the estimates for the slopes (rate of increase).  
+
+
+```r
+ssl_models &lt;- ssl_long %&gt;%
+  group_by(sitename) %&gt;%
+  filter(count &gt; 0,
+         year &gt;= 2000) %&gt;%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %&gt;%
+  nest() %&gt;%
+* mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;%
+* mutate(coef = map(model, coef),
+*        slope = map_dbl(coef, pluck, 2)) %&gt;%
+  I()
+ssl_models
+```
+
+
+```
+## # A tibble: 53 x 5
+## # Groups:   sitename [53]
+##    sitename             data              model  coef        slope
+##  * &lt;chr&gt;                &lt;list&gt;            &lt;list&gt; &lt;list&gt;      &lt;dbl&gt;
+##  1 ADAK/LAKE POINT      &lt;tibble [7 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt; -0.0232
+##  2 ADUGAK               &lt;tibble [8 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt;  0.0517
+##  3 AGATTU/CAPE SABAK    &lt;tibble [10 × 4]&gt; &lt;lm&gt;   &lt;dbl [2]&gt; -0.112 
+##  4 AGATTU/GILLON POINT  &lt;tibble [8 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt; -0.0733
+##  5 AKUN/BILLINGS HEAD   &lt;tibble [7 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt;  0.0851
+##  6 AKUTAN/CAPE MORGAN   &lt;tibble [8 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt;  0.0399
+##  7 AMCHITKA/COLUMN ROCK &lt;tibble [5 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt; -0.107 
+##  8 ATKINS               &lt;tibble [9 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt;  0.0315
+##  9 ATTU/CAPE WRANGELL   &lt;tibble [8 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt; -0.0715
+## 10 AYUGADAK             &lt;tibble [7 × 4]&gt;  &lt;lm&gt;   &lt;dbl [2]&gt; -0.0525
+## # … with 43 more rows
+```
+
+---
+
+Plot the estimates for the rates of increase (slopes).  
+
+.pull-left[
+
+```r
+ssl_models &lt;- ssl_long %&gt;%
+  group_by(sitename) %&gt;%
+  filter(count &gt; 0,
+         year &gt;= 2000) %&gt;%
+  mutate(year2 = as.numeric(year)-2000,
+         log_count = log(count)) %&gt;%
+  nest() %&gt;%
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;% 
+  mutate(coef = map(model, coef),
+         slope = map_dbl(coef, pluck, 2)) %&gt;% 
+  I()
+ssl_models %&gt;%
+  ggplot() +
+  aes(x = fct_reorder(sitename, slope), y = slope) +
+  geom_point() +
+  coord_flip() +
+  NULL
+```
+]
+
+.pull-right[
+![](purrr-slides_files/figure-html/unnamed-chunk-33-1.png)&lt;!-- --&gt;
+]
+
+Pup production increasing at many sites but declining at some.  
+(some sites have very few counts)  
+
+.footnote[
+data from [NOAA Fisheries National Marine Mammal Lab]("https://www.fisheries.noaa.gov/alaska/marine-mammal-protection/steller-sea-lion-data")
+]
+---
+
+We want to obtain confidence intervals of the slope estimates by performing residual bootstrapping.  
+Instead of resampling the data (which would destroy the relationship with year), we resample the residuals from the initial models.  
+
+
+```r
+nboot &lt;- 100
+# first extract a table of fitted values and residuals using augment
+ssl_boot &lt;- ssl_models %&gt;%
+  mutate(tbl = map(model, broom::augment)) %&gt;% 
+  select(sitename, tbl) %&gt;% 
+  unnest(cols=c(tbl)) %&gt;% 
+  rename("resid" = ".resid") %&gt;% 
+  I()
+ssl_boot
+```
+
+```
+## # A tibble: 372 x 10
+## # Groups:   sitename [53]
+##    sitename log_count year2 .fitted .se.fit    resid  .hat .sigma .cooksd
+##  * &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+##  1 ADAK/LA…      5.89     2    5.90  0.0522 -0.00375 0.452 0.0868 0.00176
+##  2 ADAK/LA…      5.86     4    5.85  0.0409  0.00614 0.277 0.0868 0.00166
+##  3 ADAK/LA…      5.74     5    5.83  0.0361 -0.0888  0.216 0.0709 0.231  
+##  4 ADAK/LA…      5.82     9    5.74  0.0305  0.0886  0.155 0.0722 0.141  
+##  5 ADAK/LA…      5.76    10    5.71  0.0333  0.0509  0.184 0.0821 0.0595 
+##  6 ADAK/LA…      5.73    11    5.69  0.0374  0.0454  0.232 0.0829 0.0673 
+##  7 ADAK/LA…      5.52    14    5.62  0.0540 -0.0985  0.483 0.0533 1.46   
+##  8 ADUGAK        5.03     0    4.99  0.0522  0.0416  0.412 0.0857 0.155  
+##  9 ADUGAK        5.08     2    5.09  0.0422 -0.0172  0.269 0.0886 0.0112 
+## 10 ADUGAK        5.12     4    5.20  0.0340 -0.0778  0.175 0.0804 0.118  
+## # … with 362 more rows, and 1 more variable: .std.resid &lt;dbl&gt;
+```
+
+---
+
+We'll do resampling from the residuals for each year within each rookery.  
+Rather than getting complicated with uber-nested lists, we'll use `sample_frac()` to do the resamples.  
+
+
+```r
+tosample &lt;- ssl_boot %&gt;% 
+  select(sitename, resid) %&gt;% 
+  group_by(sitename)
+tosample
+```
+
+```
+## # A tibble: 372 x 2
+## # Groups:   sitename [53]
+##    sitename           resid
+##  * &lt;chr&gt;              &lt;dbl&gt;
+##  1 ADAK/LAKE POINT -0.00375
+##  2 ADAK/LAKE POINT  0.00614
+##  3 ADAK/LAKE POINT -0.0888 
+##  4 ADAK/LAKE POINT  0.0886 
+##  5 ADAK/LAKE POINT  0.0509 
+##  6 ADAK/LAKE POINT  0.0454 
+##  7 ADAK/LAKE POINT -0.0985 
+##  8 ADUGAK           0.0416 
+##  9 ADUGAK          -0.0172 
+## 10 ADUGAK          -0.0778 
+## # … with 362 more rows
+```
+
+---
+
+We'll do resampling from the residuals for each year within each rookery.  
+Rather than getting complicated with uber-nested lists, we'll use `sample_frac()` to do the resamples.  
+
+
+```r
+tosample &lt;- ssl_boot %&gt;% 
+  select(sitename, resid) %&gt;% 
+  group_by(sitename)
+#tosample
+resamples &lt;-
+*  map_dfr(seq_len(nboot),~sample_frac(tosample, size = 1, replace = TRUE)) %&gt;%
+   ungroup() %&gt;% 
+   mutate(replicate = rep(1:nboot, each = nrow(tosample)))
+resamples
+```
+
+```
+## # A tibble: 37,200 x 3
+##    sitename           resid replicate
+##    &lt;chr&gt;              &lt;dbl&gt;     &lt;int&gt;
+##  1 ADAK/LAKE POINT -0.0985          1
+##  2 ADAK/LAKE POINT -0.00375         1
+##  3 ADAK/LAKE POINT  0.00614         1
+##  4 ADAK/LAKE POINT -0.0888          1
+##  5 ADAK/LAKE POINT -0.0888          1
+##  6 ADAK/LAKE POINT  0.0886          1
+##  7 ADAK/LAKE POINT  0.00614         1
+##  8 ADUGAK           0.168           1
+##  9 ADUGAK          -0.0778          1
+## 10 ADUGAK          -0.0778          1
+## # … with 37,190 more rows
+```
+
+---
+
+`resamples` contains our bootstraps.  
+Let's append them to the data frame so we can compute the new data and re-fit the models for each case.  
+
+
+```r
+*ssl_bootmod &lt;- map_dfr(seq_len(nboot), ~I(ssl_boot)) %&gt;%
+  select(-resid) %&gt;% 
+* bind_cols(resamples) %&gt;%
+  mutate(log_count = .fitted + resid) %&gt;% 
+  group_by(sitename, replicate) %&gt;% 
+  nest() 
+ssl_bootmod
+```
+
+```
+## # A tibble: 5,300 x 3
+## # Groups:   sitename, replicate [5,300]
+##    sitename             replicate data              
+##    &lt;chr&gt;                    &lt;int&gt; &lt;list&gt;            
+##  1 ADAK/LAKE POINT              1 &lt;tibble [7 × 10]&gt; 
+##  2 ADUGAK                       1 &lt;tibble [8 × 10]&gt; 
+##  3 AGATTU/CAPE SABAK            1 &lt;tibble [10 × 10]&gt;
+##  4 AGATTU/GILLON POINT          1 &lt;tibble [8 × 10]&gt; 
+##  5 AKUN/BILLINGS HEAD           1 &lt;tibble [7 × 10]&gt; 
+##  6 AKUTAN/CAPE MORGAN           1 &lt;tibble [8 × 10]&gt; 
+##  7 AMCHITKA/COLUMN ROCK         1 &lt;tibble [5 × 10]&gt; 
+##  8 ATKINS                       1 &lt;tibble [9 × 10]&gt; 
+##  9 ATTU/CAPE WRANGELL           1 &lt;tibble [8 × 10]&gt; 
+## 10 AYUGADAK                     1 &lt;tibble [7 × 10]&gt; 
+## # … with 5,290 more rows
+```
+
+We now have a data frame with a row for each site &amp; replicate
+
+---
+
+We now have a data frame with a row for each site &amp; replicate.  
+We can use the same code as before to fit the (5,300) models.  
+
+
+```r
+ssl_bootmod &lt;- map_dfr(seq_len(nboot), ~I(ssl_boot)) %&gt;%  
+  select(-resid) %&gt;% 
+  bind_cols(resamples) %&gt;% 
+  mutate(log_count = .fitted + resid) %&gt;% 
+  group_by(sitename, replicate) %&gt;% 
+  nest() %&gt;%  
+* mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;%
+* mutate(coef = map(model, coef)) %&gt;%
+* mutate(slope = map_dbl(coef, pluck, 2)) %&gt;%
+    ungroup()
+```
+
+---
+
+We now have a data frame with a row for each site &amp; replicate.  
+We can use the same code as before to fit the (5,300) models.  
+
+
+```r
+ssl_bootmod &lt;- map_dfr(seq_len(nboot), ~I(ssl_boot)) %&gt;%  
+  select(-resid) %&gt;% 
+  bind_cols(resamples) %&gt;%  
+  mutate(log_count = .fitted + resid) %&gt;% 
+  group_by(sitename, replicate) %&gt;% 
+  nest() %&gt;%  
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;% 
+  mutate(coef = map(model, coef)) %&gt;%  
+  mutate(slope = map_dbl(coef, pluck, 2)) %&gt;%  
+    ungroup() %&gt;% 
+* group_by(sitename) %&gt;%
+* mutate(med = median(slope),
+*        lower = quantile(slope, 0.025),
+*        upper = quantile(slope, 0.975)) %&gt;%
+  I()
+ssl_bootmod
+```
+
+```
+## # A tibble: 5,300 x 9
+## # Groups:   sitename [53]
+##    sitename     replicate data     model coef     slope     med    lower   upper
+##  * &lt;chr&gt;            &lt;int&gt; &lt;list&gt;   &lt;lis&gt; &lt;list&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+##  1 ADAK/LAKE P…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.0178 -0.0223 -3.20e-2 -0.0126
+##  2 ADUGAK               1 &lt;tibble… &lt;lm&gt;  &lt;dbl …  0.0455  0.0507  4.13e-2  0.0627
+##  3 AGATTU/CAPE…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.112  -0.112  -1.25e-1 -0.101 
+##  4 AGATTU/GILL…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.0691 -0.0730 -1.03e-1 -0.0426
+##  5 AKUN/BILLIN…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl …  0.0836  0.0819  5.04e-2  0.117 
+##  6 AKUTAN/CAPE…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl …  0.0352  0.0404  2.82e-2  0.0488
+##  7 AMCHITKA/CO…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.0613 -0.108  -1.49e-1 -0.0626
+##  8 ATKINS               1 &lt;tibble… &lt;lm&gt;  &lt;dbl …  0.0470  0.0371 -5.64e-4  0.0743
+##  9 ATTU/CAPE W…         1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.0732 -0.0724 -1.00e-1 -0.0395
+## 10 AYUGADAK             1 &lt;tibble… &lt;lm&gt;  &lt;dbl … -0.0657 -0.0538 -7.85e-2 -0.0253
+## # … with 5,290 more rows
+```
+
+---
+
+
+Now plot summaries of the bootstrapped estimates for the slopes.    
+Intervals are the distribution of 100 estimates of the slope for each rookery.   
+
+.pull-left[
+
+```r
+ssl_bootmod &lt;- map_dfr(seq_len(nboot), ~I(ssl_boot)) %&gt;%  
+  select(-resid) %&gt;% 
+  bind_cols(resamples) %&gt;%  
+  mutate(log_count = .fitted + resid) %&gt;% 
+  group_by(sitename, replicate) %&gt;% 
+  nest() %&gt;%  
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;% 
+  mutate(coef = map(model, coef)) %&gt;%  
+  mutate(slope = map_dbl(coef, pluck, 2)) %&gt;%  
+    ungroup() %&gt;% 
+  group_by(sitename) %&gt;%    
+  mutate(med = median(slope), 
+         lower = quantile(slope, 0.025), 
+         upper = quantile(slope, 0.975)) %&gt;%  
+  I()
+p1 &lt;- ggplot(ssl_bootmod) +
+* aes(x = fct_reorder(sitename, med), y = med) +
+  geom_point() +
+* geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) +
+  coord_flip() +
+  theme_minimal() +
+  labs(y = "slope",
+       x = "") +
+  NULL
+p1
+```
+]
+
+.pull-right[
+![](purrr-slides_files/figure-html/unnamed-chunk-40-1.png)&lt;!-- --&gt;
+]
+
+
+---
+
+### Problem 3: Fishery CPUE  
+
+We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+Want to compare models that use different combinations of these variables.  
+Let's look at NMFS Northeast US spring bottom trawl survey data for black sea bass.  
+We'll fit a few GAMs of catch per tow with different numbers of covariates.  
+
+.pull-left[
+
+```r
+bsb &lt;- read_csv("data/neus_bts.csv") %&gt;% 
+  filter(comname == "BLACK SEA BASS",
+         biomass &gt; 0,
+         season == "SPRING")
+bsb
+```
+]
+
+.pull-right[
+
+```
+## # A tibble: 537 x 11
+##    station stratum  year season   lat   lon depth surftemp comname abundance
+##      &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;       &lt;dbl&gt;
+##  1       1    1020  2001 SPRING  39.7 -72.4    89     6.42 BLACK …         9
+##  2       1    1030  2006 SPRING  39.2 -72.7   115     7.06 BLACK …         1
+##  3       1    1700  2003 SPRING  38.5 -73.9    59     8.83 BLACK …       209
+##  4       1    1750  2004 SPRING  39.0 -72.9    99     4.18 BLACK …      7614
+##  5       2    1700  2003 SPRING  38.4 -74.0    63     8.96 BLACK …         1
+##  6       3    1060  2008 SPRING  40.3 -71.6    83     5.21 BLACK …         1
+##  7       3    1700  2003 SPRING  38.4 -74.1    59     8.84 BLACK …         4
+##  8       3    1750  2004 SPRING  38.5 -73.3   124     5.81 BLACK …       348
+##  9       4    1700  2011 SPRING  38.2 -74.0    79     7.16 BLACK …        15
+## 10       4    1700  2013 SPRING  38.3 -73.8   109     7.87 BLACK …      2640
+## # … with 527 more rows, and 1 more variable: biomass &lt;dbl&gt;
+```
+]
+
+.footnote[
+data from [https://oceanadapt.rutgers.edu/]("https://oceanadapt.rutgers.edu/")
+]
+
+---
+
+First make a list of model formulae using `accumulate()`  
+
+
+```r
+terms &lt;- rev(names(bsb)[c(5:8)])
+parts &lt;- str_c("s(",terms,")")
+forms &lt;- map(accumulate(parts, 
+                        paste, 
+                        sep = " + ", 
+                        .init = "log(biomass) ~ factor(year)"),
+             as.formula)
+forms
+```
+
+```
+## [[1]]
+## log(biomass) ~ factor(year)
+## &lt;environment: 0x7fa615fdd950&gt;
+## 
+## [[2]]
+## log(biomass) ~ factor(year) + s(surftemp)
+## &lt;environment: 0x7fa615fdd950&gt;
+## 
+## [[3]]
+## log(biomass) ~ factor(year) + s(surftemp) + s(depth)
+## &lt;environment: 0x7fa615fdd950&gt;
+## 
+## [[4]]
+## log(biomass) ~ factor(year) + s(surftemp) + s(depth) + s(lon)
+## &lt;environment: 0x7fa615fdd950&gt;
+## 
+## [[5]]
+## log(biomass) ~ factor(year) + s(surftemp) + s(depth) + s(lon) + 
+##     s(lat)
+## &lt;environment: 0x7fa615fdd950&gt;
+```
+
+---
+
+Use `modelr::fitwith()` to fit `gam()` for each formula
+
+.pull-left[
+
+```r
+bsb_gams &lt;- enframe(forms, name = "id", 
+                    value = "formula") %&gt;%
+  mutate(model = modelr::fit_with(bsb, 
+                                  mgcv::gam, 
+                                  .formulas = forms),
+         aic = map_dbl(model, AIC),
+         p1 = map(model, gratia::draw))
+```
+
+```
+## Unable to draw any of the model terms.
+```
+
+```r
+bsb_gams
+```
+
+```
+## # A tibble: 5 x 5
+##      id formula   model    aic p1        
+##   &lt;int&gt; &lt;list&gt;    &lt;list&gt; &lt;dbl&gt; &lt;list&gt;    
+## 1     1 &lt;formula&gt; &lt;gam&gt;  2862. &lt;list [0]&gt;
+## 2     2 &lt;formula&gt; &lt;gam&gt;  2542. &lt;gg&gt;      
+## 3     3 &lt;formula&gt; &lt;gam&gt;  2386. &lt;gg&gt;      
+## 4     4 &lt;formula&gt; &lt;gam&gt;  2337. &lt;gg&gt;      
+## 5     5 &lt;formula&gt; &lt;gam&gt;  2313. &lt;gg&gt;
+```
+]
+
+--
+
+.pull-right[
+
+```r
+best_gam &lt;- bsb_gams %&gt;% 
+  slice(which.min(bsb_gams$aic))
+print(best_gam$p1)
+```
+
+```
+## [[1]]
+```
+
+![](purrr-slides_files/figure-html/unnamed-chunk-44-1.png)&lt;!-- --&gt;
+]
+
+---
+
+### Problem 4: Population Viability Analysis
 
 Status for endangered species are often based on a risk evaluation of population projections.  
 
@@ -598,127 +1231,62 @@ We want to project population dynamics forward in time given uncertainty in futu
 
 We want to do this lots of times to quantify the risk of extinction.  
 
+Initial population size is 7500, declines at 2% per year but there is annual (lognormal) process error with std. deviation 0.1    
 
-&lt;!-- --- --&gt;
+i.e.
+`\(N_{t+1} = \lambda N_{t} e^{\epsilon_{t}}\)`  
 
-&lt;!-- ```{r} --&gt;
+`\(\epsilon_t \sim N(0,\sigma_{\epsilon}^2)\)`
 
-&lt;!-- ssl &lt;- read_csv("data/SSLpupcounts.csv") --&gt;
-&lt;!-- ssl --&gt;
-&lt;!-- ssl_long &lt;- ssl %&gt;%  --&gt;
-&lt;!--   pivot_longer(names_to = "year", --&gt;
-&lt;!--                values_to = "count", --&gt;
-&lt;!--                -sitename) %&gt;%  --&gt;
-&lt;!--   na.omit() --&gt;
-&lt;!-- ssl_long --&gt;
-
-&lt;!-- ssl_models &lt;- ssl_long %&gt;%  --&gt;
-&lt;!--   group_by(sitename) %&gt;%  --&gt;
-&lt;!--   filter(count &gt; 0, --&gt;
-&lt;!--          year &gt;= 2000) %&gt;%  --&gt;
-&lt;!--   mutate(year2 = as.numeric(year)-2000, --&gt;
-&lt;!--          log_count = log(count)) %&gt;%  --&gt;
-&lt;!--   nest() %&gt;%  --&gt;
-&lt;!-- #str(ssl_models$data[1]) --&gt;
-&lt;!--   mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;%  --&gt;
-&lt;!--   mutate(coef = map(model, coef), --&gt;
-&lt;!--          slope = map_dbl(coef, pluck, 2)) %&gt;% --&gt;
-&lt;!--   I() --&gt;
-&lt;!-- ssl_models %&gt;%  --&gt;
-&lt;!--   ggplot() + --&gt;
-&lt;!--   aes(x = fct_reorder(sitename, slope), y = slope) + --&gt;
-&lt;!--   geom_point() + --&gt;
-&lt;!--   coord_flip() + --&gt;
-&lt;!--   NULL --&gt;
-
-&lt;!-- ``` --&gt;
-
-&lt;!-- ```{r} --&gt;
-&lt;!-- system.time({ --&gt;
-&lt;!-- nboot &lt;- 100 --&gt;
-&lt;!-- ssl_boot &lt;- ssl_models %&gt;% --&gt;
-&lt;!--   mutate(tbl = map(model, augment)) %&gt;%  --&gt;
-&lt;!-- #bob &lt;- ssl_boot %&gt;%  --&gt;
-&lt;!--   mutate(boot = map(tbl, specify, response = .resid)) %&gt;%  --&gt;
-&lt;!--   mutate(samples = map(boot, generate, reps = nboot, type = "bootstrap")) %&gt;%  --&gt;
-&lt;!--   mutate(nd2 = map(tbl, ~map_dfr(.x = seq_len(nboot),function(x) I(.))), --&gt;
-&lt;!--          nd2 = map(nd2, select,-.resid), --&gt;
-&lt;!--          nd2 = map2(nd2, samples, bind_cols), --&gt;
-&lt;!--          nd2 = map(nd2, mutate, log_count = .fitted + .resid), --&gt;
-&lt;!--          nd3 = map(nd2, function(x) {group_by(x, replicate) %&gt;% nest()})) %&gt;%  --&gt;
-&lt;!--   mutate(bootmod = map(nd3, ~mutate(., slope = map_dbl(data, ~coef(lm(log_count~year2, data = .))[2]))), --&gt;
-&lt;!--          quantboot = map(bootmod, ~quantile(.$slope, probs=c(0.025,0.5,0.975)))) %&gt;% --&gt;
-&lt;!--   unnest(quantboot) %&gt;%  --&gt;
-&lt;!--   mutate(quant = c("lower","med","upper")) %&gt;%  --&gt;
-&lt;!--   pivot_wider(names_from = quant, --&gt;
-&lt;!--               values_from = quantboot) %&gt;%  --&gt;
-&lt;!--   I() --&gt;
-
-&lt;!-- p1 &lt;- ggplot(ssl_boot) + --&gt;
-&lt;!--   aes(x = fct_reorder(sitename, med), y = med) + --&gt;
-&lt;!--   geom_point() + --&gt;
-&lt;!--   geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) + --&gt;
-&lt;!--   coord_flip() + --&gt;
-&lt;!--   theme_minimal() + --&gt;
-&lt;!--   labs(y = "slope", --&gt;
-&lt;!--        x = "") + --&gt;
-&lt;!--   NULL}) --&gt;
-&lt;!-- p1 --&gt;
-&lt;!-- ``` --&gt;
+---
 
 
-&lt;!-- --- --&gt;
+```r
+nsim &lt;- 100
+nyr &lt;- 100
+lambda = 0.98
+sd_proc &lt;- 0.1
+initN &lt;- 7500
+# create our list of time series for the process errors
+errors &lt;- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc))
 
-&lt;!-- ```{r} --&gt;
+# population model
+pop_update &lt;- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err)
 
-&lt;!-- bsb &lt;- read_csv("data/neus_bts.csv") %&gt;%  --&gt;
-&lt;!--   filter(comname == "BLACK SEA BASS", --&gt;
-&lt;!--          biomass &gt; 0, --&gt;
-&lt;!--          season == "SPRING") --&gt;
-&lt;!-- bsb --&gt;
+# population projection for each time series of process errors
+pop_proj &lt;- map(errors,~accumulate(., pop_update, .init = initN, lambda = lambda)) %&gt;% 
+  enframe() %&gt;% 
+  rename(replicate = name) %&gt;%
+  mutate(final_n = map_dbl(value, pluck, nyr+1),
+         drops_below_500 = map_lgl(value, ~any(.&lt;500)))
+p500 &lt;- sum(pop_proj$drops_below_500)/nsim
+p500
+```
 
-&lt;!-- terms &lt;- rev(names(bsb)[c(5:8)]) --&gt;
-&lt;!-- parts &lt;- str_c("s(",terms,")") --&gt;
-&lt;!-- forms &lt;- map(accumulate(parts, paste, sep = " + ", .init = "log(biomass) ~ factor(year)"), as.formula) --&gt;
+```
+## [1] 0.24
+```
 
-&lt;!-- bsb_gams &lt;- enframe(forms, name = "id", value = "formula") %&gt;% --&gt;
-&lt;!--   mutate(model = modelr::fit_with(bsb, mgcv::gam, .formulas = forms), --&gt;
-&lt;!--          aic = map_dbl(model, AIC), --&gt;
-&lt;!--          p1 = map(model, gratia::draw)) --&gt;
-&lt;!-- bsb_gams2 &lt;- bsb_gams %&gt;%  --&gt;
-&lt;!--   slice(which.min(bsb_gams$aic)) %&gt;%  --&gt;
-&lt;!--   #mutate(p1 = map(model, gratia::draw)) %&gt;%  --&gt;
-&lt;!--   #print(p1) %&gt;%  --&gt;
-&lt;!--   I() --&gt;
-&lt;!-- print(bsb_gams2$p1) --&gt;
-&lt;!-- ``` --&gt;
+```r
+pop_proj
+```
 
-
-&lt;!-- ```{r} --&gt;
-&lt;!-- nsim &lt;- 10 --&gt;
-&lt;!-- nyr &lt;- 100 --&gt;
-&lt;!-- sd_proc &lt;- 0.1 --&gt;
-&lt;!-- errors &lt;- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc)) --&gt;
-&lt;!-- pop_update &lt;- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err) --&gt;
-&lt;!-- h &lt;- rep(10,10) --&gt;
-&lt;!-- initN &lt;- 7500 --&gt;
-&lt;!-- pop2 &lt;- map(errors,~accumulate(., pop_update, .init = initN, lambda = 1.05)) --&gt;
-&lt;!-- ``` --&gt;
-
-&lt;!-- If there are 7,500 snow leopards in year 2018 and they are declining at 5% per year, in what year will they fall below 500 individuals? --&gt;
-
-&lt;!-- ```{r prompt=TRUE,comment='',collapse=TRUE} --&gt;
-&lt;!-- leopard.loop &lt;- function(N, year=2018) { --&gt;
-&lt;!--   while (N&gt;=500) { --&gt;
-&lt;!--     N &lt;- N*0.95 --&gt;
-&lt;!--     year &lt;- year+1 --&gt;
-&lt;!--   } --&gt;
-&lt;!--   return(year) --&gt;
-&lt;!-- } --&gt;
-&lt;!-- leopard.loop(N=7500) --&gt;
-&lt;!-- ``` --&gt;
-
-&lt;!-- Pro-tip: when you end up in an infinite loop with no stopping point, press `&lt;ESC&gt;` to stop it running! --&gt;
+```
+## # A tibble: 100 x 4
+##    replicate value       final_n drops_below_500
+##        &lt;int&gt; &lt;list&gt;        &lt;dbl&gt; &lt;lgl&gt;          
+##  1         1 &lt;dbl [101]&gt;    196. TRUE           
+##  2         2 &lt;dbl [101]&gt;    616. FALSE          
+##  3         3 &lt;dbl [101]&gt;    206. TRUE           
+##  4         4 &lt;dbl [101]&gt;    531. TRUE           
+##  5         5 &lt;dbl [101]&gt;   3834. FALSE          
+##  6         6 &lt;dbl [101]&gt;   1081. FALSE          
+##  7         7 &lt;dbl [101]&gt;   1843. FALSE          
+##  8         8 &lt;dbl [101]&gt;   1065. FALSE          
+##  9         9 &lt;dbl [101]&gt;   1736. FALSE          
+## 10        10 &lt;dbl [101]&gt;   2343. FALSE          
+## # … with 90 more rows
+```
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
