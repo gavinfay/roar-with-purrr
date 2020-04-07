@@ -383,8 +383,9 @@ resamples <-
    ungroup() %>% 
    mutate(replicate = rep(1:nboot, each = nrow(tosample)))
 resamples
-ssl_boot %>% 
-  map_dfr(seq_len(nboot),~I(.))
+ssl_boot <- ssl_boot %>% 
+  ungroup() %>% 
+  map_df(seq_len(nboot),~I(.))
 ssl_boot
 
 ```
