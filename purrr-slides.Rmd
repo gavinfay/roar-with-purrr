@@ -18,7 +18,7 @@ background-size: cover
 # Make your R roar by purrring
 ### Gavin Fay   
 <br> __2020-04-07: UMassD Quantfish woRkshop__
-<br>`r icon::fa("link")` [github.com/thefaylab/roar-with-purrr](https://github.com/thefaylab/roar-with-purrr)
+<br>`r icon::fa("link")` [github.com/gavinfay/roar-with-purrr](https://github.com/gavinfay/roar-with-purrr)
 <br> `r icon::fa("envelope")` [gfay@umassd.edu](gfay@umassd.edu)  `r icon::fa("twitter")` [gavin_fay](https://twitter.com/gavin_fay)
 
 <!-- [default, metropolis, metropolis-fonts] -->
@@ -30,7 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(prompt = FALSE)
 options(htmltools.dir.version = FALSE)
 library(tidymodels)
-#library(tidyverse)
+library(tidyverse)
 #library(infer)
 #devtools::install_github("gadenbuie/countdown")
 library(countdown)
@@ -44,9 +44,7 @@ background-size: 10%
 ## Make your R roar with `purrr`
 
 Google Doc containing links to today's resources:  
-[link]("link")
-
-[Code of Conduct]("link to code of conduct")
+[bit.ly/roar-with-purrr]("bit.ly/roar-with-purrr")
 
 Add your name to attendance.  
 
@@ -54,8 +52,11 @@ Add notes/tips to googledoc to create shared learning resource.
 
 Use your own computer or RStudio Cloud machine  
 
+These slides:
+[gavinfay.github.io/roar-with-purrr/purrr-slides]("gavinfay.github.io/roar-with-purrr/purrr-slides")
+
 My .Rmd updated live at:  
-[link]("link")
+[https://github.com/gavinfay/roar-with-purrr]("https://github.com/gavinfay/roar-with-purrr")
 
 __Acknowledgements:__  
 [Dan Ovando]("https://twitter.com/DanOvand0"), 
@@ -326,7 +327,7 @@ a. Compute the mean of every column in `mtcars`.
 b. Determine the type of each column in `nycflights13::flights`.  
 c. Compute the number of unique values in each column of `iris`.  
 
-```{r, }
+```{r, echo = FALSE}
 countdown(minutes = 5)
 ```
 
@@ -400,7 +401,9 @@ $N_{t+1} = \lambda N_{t} - h_{t}$
 
 Can achieve this using `accumulate()`.  
 
-![](figs/accumulate.png)
+```{r out.width = "80%", echo = FALSE}
+knitr::include_graphics("figs/accumulate.png")
+```
 
 ---
 
