@@ -375,6 +375,7 @@ ssl_boot <- ssl_models %>%
   unnest(cols=c(tbl)) %>% 
   rename("resid" = ".resid") %>% 
   I()
+ssl_boot
 ```
 
 
