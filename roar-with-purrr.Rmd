@@ -370,7 +370,7 @@ ggplot(ssl_models) +
 #system.time({
 nboot <- 100
 ssl_boot <- ssl_models %>%
-  mutate(tbl = map(model, augment)) %>% 
+  mutate(tbl = map(model, broom::augment)) %>% 
   select(sitename, tbl) %>% 
   unnest(cols=c(tbl)) %>% 
   rename("resid" = ".resid") %>% 
