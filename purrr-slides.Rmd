@@ -62,7 +62,8 @@ __Acknowledgements:__
 [Dan Ovando]("https://twitter.com/DanOvand0"), 
 [Maia Kapur]("https://twitter.com/KapurMaia"), 
 [Mine Çetinkaya-Rundel]("https://twitter.com/minebocek"), 
-[Alison Hill]("https://twitter.com/apreshill")
+[Alison Hill]("https://twitter.com/apreshill"), 
+[Megsie Siple]("https://twitter.com/margaretsiple)
 
 ---
 
@@ -102,12 +103,17 @@ We would like to read these data into R, and combine them into a single data fra
 ## Problem 2  
 
 We have data on Steller sea lion pup counts over time at a bunch of rookeries in Alaska.  
+
+```{r out.width="60%", retina = 3, echo= FALSE}
+knitr::include_graphics("figs/Slide5.png")
+```
+
 The number of data points for each rookery is not the same.  
 
 We want to investigate the annual trend in counts for each rookery.  
-[i.e. fit a regression of log(counts) on time for each rookery]
 We want to plot the slopes of the regressions using a histogram.  
 We want to obtain confidence intervals of the slope estimates using bootstrapping.  
+
 
 ---
 
