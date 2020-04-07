@@ -440,60 +440,58 @@ We would like to read these data into R, and combine them into a single data fra
 
 ---
 
-```{r warning = FALSE, comment=FALSE, message=FALSE}
-files <- dir(path = "data/crabs", 
-             pattern = "*.csv", 
-             full.names = TRUE)
-files
-```
+<!-- --- -->
 
----
+<!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} -->
+<!-- files <- dir(path = "data/crabs",  -->
+<!--              pattern = "*.csv",  -->
+<!--              full.names = TRUE) -->
+<!-- files -->
+<!-- ``` -->
 
-```{r warning = FALSE, comment=FALSE, message=FALSE}
-files <- dir(path = "data/crabs", 
-             pattern = "*.csv", 
-             full.names = TRUE)
-#files
-crab_data <- map_df(files, read_csv) %>% 
-  group_by(year, site) %>%
-  I()
-crab_data
-```
+<!-- --- -->
 
----
+<!-- ```{r warning = FALSE, comment=FALSE, message=FALSE} -->
+<!-- files <- dir(path = "data/crabs",  -->
+<!--              pattern = "*.csv",  -->
+<!--              full.names = TRUE) -->
+<!-- #files -->
+<!-- crab_data <- map_df(files, read_csv) %>%  -->
+<!--   group_by(year, site) %>% -->
+<!--   I() -->
+<!-- crab_data -->
+<!-- ``` -->
 
-.pull-left[
-```{r crabs, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'}
-files <- dir(path = "data/crabs", 
-             pattern = "*.csv", 
-             full.names = TRUE)
-#files
-crab_data <- map_df(files, read_csv) %>% 
-  group_by(year, site) %>%
-  I()
-#crab_data
-crab_plot <- ggplot(crab_data) +
-  aes(x = carcinus, 
-      y = cancer, 
-      group = site) +
-  geom_point() +
-  facet_wrap(~site) +
-  theme_minimal() +
-  NULL
-crab_plot
-```
-]
+<!-- --- -->
 
---
+<!-- .pull-left[ -->
+<!-- ```{r crabs, warning = FALSE, comment=FALSE, message=FALSE, fig.show = 'hide'} -->
+<!-- files <- dir(path = "data/crabs",  -->
+<!--              pattern = "*.csv",  -->
+<!--              full.names = TRUE) -->
+<!-- #files -->
+<!-- crab_data <- map_df(files, read_csv) %>%  -->
+<!--   group_by(year, site) %>% -->
+<!--   I() -->
+<!-- #crab_data -->
+<!-- crab_plot <- ggplot(crab_data) + -->
+<!--   aes(x = carcinus,  -->
+<!--       y = cancer,  -->
+<!--       group = site) + -->
+<!--   geom_point() + -->
+<!--   facet_wrap(~site) + -->
+<!--   theme_minimal() + -->
+<!--   NULL -->
+<!-- crab_plot -->
+<!-- ``` -->
+<!-- ] -->
 
-.pull-right[
-```{r ref.label= 'crabs', echo = FALSE, retina = 3, message= FALSE}
-```
-]
+<!-- -- -->
 
-
-
----
+<!-- .pull-right[ -->
+<!-- ```{r ref.label= 'crabs', echo = FALSE, retina = 3, message= FALSE} -->
+<!-- ``` -->
+<!-- ] -->
 
 ## Problem 2  
 
@@ -508,6 +506,27 @@ The number of data points for each rookery is not the same.
 We want to investigate the annual trend in counts for each rookery.  
 We want to plot the slopes of the regressions using a histogram.  
 We want to obtain confidence intervals of the slope estimates using bootstrapping.  
+
+
+---
+
+## Problem 3  
+
+We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+
+We have many possible variables.  
+
+We would like to compare models that use different combinations of these variables.  
+
+---
+
+## Problem 4
+
+Status for endangered species are often based on a risk evaluation of population projections.  
+
+We want to project population dynamics forward in time given uncertainty in future dynamics.  
+
+We want to do this lots of times to quantify the risk of extinction.  
 
 
 <!-- --- -->
@@ -578,17 +597,6 @@ We want to obtain confidence intervals of the slope estimates using bootstrappin
 <!-- ``` -->
 
 
-
----
-
-## Problem 3  
-
-We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
-
-We have many possible variables.  
-
-We would like to compare models that use different combinations of these variables.  
-
 <!-- --- -->
 
 <!-- ```{r} -->
@@ -614,15 +622,6 @@ We would like to compare models that use different combinations of these variabl
 <!--   I() -->
 <!-- print(bsb_gams2$p1) -->
 <!-- ``` -->
-
-
-## Problem 4
-
-Status for endangered species are often based on a risk evaluation of population projections.  
-
-We want to project population dynamics forward in time given uncertainty in future dynamics.  
-
-We want to do this lots of times to quantify the risk of extinction.  
 
 
 <!-- ```{r} -->
