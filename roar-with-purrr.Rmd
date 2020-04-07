@@ -334,12 +334,19 @@ ssl_long <- ssl %>%
 ssl_long
 
 ssl_models <- ssl_long %>% 
+  mutate(year = as.numeric(year)) %>% 
   filter(year >= 2000,
          count > 0) %>%
   mutate(log_count = log(count),
          year2 = year-2000) %>% 
-  I()
-ssl_models
+#  I()
+#ssl_models 
+  group_by(sitename) %>% 
+  nest()
+  
+
+
+  lm(log_count ~ year2, data = ssl_models)
 
 ```
 
