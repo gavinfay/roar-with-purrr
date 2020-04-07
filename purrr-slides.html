@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>roar-with-purrr</title>
+    <meta charset="utf-8" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link href="libs/countdown/countdown.css" rel="stylesheet" />
+    <script src="libs/countdown/countdown.js"></script>
+    <link rel="stylesheet" href="css/ohsu.css" type="text/css" />
+    <link rel="stylesheet" href="css/ohsu-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: inverse, left, bottom
+background-image: url(figs/lion.jpg)
+background-size: cover
+
+# Make your R roar by purrring
+### Gavin Fay   
+&lt;br&gt; __2020-04-07: UMassD Quantfish woRkshop__
+&lt;br&gt;<i class="fas  fa-link "></i> [github.com/thefaylab/roar-with-purrr](https://github.com/thefaylab/roar-with-purrr)
+&lt;br&gt; <i class="fas  fa-envelope "></i> [gfay@umassd.edu](gfay@umassd.edu)  <i class="fab  fa-twitter "></i> [gavin_fay](https://twitter.com/gavin_fay)
+
+&lt;!-- [default, metropolis, metropolis-fonts] --&gt;
+&lt;!--    highlightStyle: atelier-lakeside-light --&gt;
+
+
+
+---
+
+background-image: url(figs/logo.png)
+background-position: 95% 5%
+background-size: 10%
+
+## Make your R roar with `purrr`
+
+Google Doc containing links to today's resources:  
+[link]("link")
+
+[Code of Conduct]("link to code of conduct")
+
+Add your name to attendance.  
+
+Add notes/tips to googledoc to create shared learning resource.  
+
+Use your own computer or RStudio Cloud machine  
+
+My .Rmd updated live at:  
+[link]("link")
+
+__Acknowledgements:__  
+[Dan Ovando]("https://twitter.com/DanOvand0"), 
+[Maia Kapur]("https://twitter.com/KapurMaia"), 
+[Mine Çetinkaya-Rundel]("https://twitter.com/minebocek"), 
+[Alison Hill]("https://twitter.com/apreshill")
+
+---
+
+## Reducing code duplication
+
+- Easier to see the intent of your code, eyes are drawn to what’s different, not what stays the same.  
+
+- Easier to respond to changes, only need to make changes in one place, rather than every place you copied-and-pasted.  
+
+- Likely to have fewer bugs because each line of code is used in more places.  
+
+How? Iteration (today) &amp; Functions  
+
+---
+
+## Iteration
+
+When you need to do the same thing to multiple inputs: repeating the same operation on different columns, or on different datasets.  
+
+Two main paradigms:  
+1. imperative programming  
+2. functional programming  
+
+
+---
+
+## Problem 1
+
+We have data from several years of crab surveys.  
+
+The data for each year is contained in separate ".csv" files.  
+
+We would like to read these data into R, and combine them into a single data frame so we can inspect and plot them.  
+
+---
+
+## Problem 2  
+
+We have data on Steller sea lion pup counts over time at a bunch of rookeries in Alaska.  
+The number of data points for each rookery is not the same.  
+
+We want to investigate the annual trend in counts for each rookery.  
+[i.e. fit a regression of log(counts) on time for each rookery]
+We want to plot the slopes of the regressions using a histogram.  
+We want to obtain confidence intervals of the slope estimates using bootstrapping.  
+
+---
+
+## Problem 3  
+
+We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+We have many possible variables.  
+We would like to compare models that use different combinations of these variables.  
+
+---
+
+## Problem 4
+
+Status for endangered species are often based on a risk evaluation of population projections.  
+We want to project population dynamics forward in time given uncertainty in future dynamics.  
+We want to do this lots of times to quantify the risk of extinction.  
+
+
+---
+
+## Familiar approaches?
+
+--
+
+### `for` / `while` loops ...
+### `apply` functions (`apply()`, `tapply()`, `sapply()`, `lapply()`)  
+### `aggregate()` ...
+### `group_by() %&gt;% summarize()` in `dplyr` ...
+
+--
+
+### `purrr` package is tidyverse solution.  
+
+---
+
+## Pivot tables &amp; loops 
+
+
+
+```r
+for (i in unique(iris$Species)) {
+  meanSepalLength &lt;-
+      mean(data[iris$Species==i,]$Sepal.Length)
+  cat(i, meanSepalLength, "\n")
+}
+```
+
+
+```r
+with(iris,tapply(Sepal.Length, Species, mean))   
+```
+
+
+
+```r
+aggregate(iris$Sepal.Length, by=list(iris$Species), mean)
+```
+
+
+```r
+iris %&gt;% 
+  group_by(Species) %&gt;% 
+  summarize(mean = mean(Sepal.Length))
+```
+
+---
+
+## Common way to use loops  
+
+
+```r
+#define the elements to loop over
+species &lt;- sort(unique(iris$Species))
+
+#define how many times to do the loop
+nspecies &lt;- length(species)
+
+#create a place to store results
+mean.lengths &lt;- vector(length=nspecies)
+
+#get loopy
+for (i in 1:nspecies) {
+  species.data &lt;- iris[iris$Species==species[i], ]
+* mean.lengths[i] &lt;- mean(species.data$Sepal.Length)
+  print(mean.lengths[i])
+  cat("Running species ", i,"\n")
+}
+```
+
+A lot of this code is book-keeping rather than the thing we want to do.  
+
+---
+
+background-image: url(figs/logo.png)
+background-position: 0% 100%
+background-size: 10%
+
+## `purrr`
+
+`for` loops are simple, but they require lots of code that is mostly book-keeping.  
+
+Attention is then on this rather than the action the code is doing.  
+
+Functional programming abstracts the book-keeping of the loop to keep attention on the code that matters.  
+
+Series of `apply` functions in base R. (`apply`, `tapply`, `sapply`, `lapply`)  
+These all have slight differences about how they are used.  
+
+`purrr` package is the tidyverse solution to the apply functions.  
+
+---
+
+class: center, middle
+
+![](figs/giraffic_park.gif)
+
+---
+
+background-image: url(figs/worldcat.jpg)
+background-position: 50% 100%
+background-size: 30%
+
+## Basics of `purrr`
+
+The `map` function is the workhorse of `purrr`.  
+e.g. 
+.pull-left[
+
+```r
+shades &lt;- colors()[1:5]  
+for (i in seq_along(shades)) { 
+  print(shades[i])  
+}
+```
+
+```
+## [1] "white"
+## [1] "aliceblue"
+## [1] "antiquewhite"
+## [1] "antiquewhite1"
+## [1] "antiquewhite2"
+```
+]
+
+--
+
+.pull-right[
+
+```r
+*a &lt;-  map(shades, print)
+```
+
+```
+## [1] "white"
+## [1] "aliceblue"
+## [1] "antiquewhite"
+## [1] "antiquewhite1"
+## [1] "antiquewhite2"
+```
+]
+
+---
+
+## `map`
+
+Basic syntax:
+
+
+```r
+*map("Lists to apply function to",
+*   "Function to apply across lists",
+*   "Additional parameters")
+```
+
+`map` by default returns a list. However we can specify the type of output:  
+
+`map_dbl` returns real numbers  
+`map_lgl` returns logicals  
+`map_chr` returns characters  
+`map_int` returns integers  
+`map_df`  returns a dataframe    
+
+![](figs/map.png)
+
+[cheatsheat: github.com/rstudio/cheatsheets/blob/master/purrr.pdf](https://github.com/rstudio/cheatsheets/blob/master/purrr.pdf)
+
+
+---
+
+## Shortcuts
+
+
+```r
+models &lt;- mtcars %&gt;% 
+  split(.$cyl) %&gt;% 
+* map(function(df) lm(mpg ~ wt, data = df))
+```
+
+The syntax for creating an anonymous function in R is quite verbose so purrr provides a convenient shortcut: a one-sided formula.  
+
+
+```r
+models &lt;- mtcars %&gt;% 
+  split(.$cyl) %&gt;%  
+* map(~lm(mpg ~ wt, data = .))
+  #The 1st ~ is shorthand for a function
+  #The '.' shows where the stuff passed to map gets used.
+```
+
+---
+
+## Shortcuts 2
+
+Extracting summary statistics
+
+
+```r
+models %&gt;%
+  map(summary) %&gt;% 
+  map_dbl(pluck, "r.squared")
+```
+
+
+```r
+models %&gt;%
+  map(summary) %&gt;% #run 'summary() for each model
+  map_dbl(~.$r.squared) # find the R-squared
+```
+
+Extracting named components is a common operation, so can use a string instead.
+
+
+```r
+models %&gt;%
+  map(summary) %&gt;% #run 'summary() for each model
+  map_dbl("r.squared") #find the R-squared 
+```
+
+---
+
+## Exercise 1
+
+Write code that uses one of the map functions to:  
+
+a. Compute the mean of every column in `mtcars`.  
+b. Determine the type of each column in `nycflights13::flights`.  
+c. Compute the number of unique values in each column of `iris`.  
+
+
+```r
+countdown(minutes = 5)
+```
+
+<div class="countdown" id="timer_5e8c5cf9" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+
+---
+
+## Extending to multiple input lists
+
+`map2` allows you to map over two sets of inputs.  
+
+
+```r
+map2(list1, list2, ~function(.x,.y), ...)
+```
+
+e.g. generate 3 sets of 5 normal random variables, with the means &amp; standard deviations different in each set.  
+
+```r
+mu &lt;- list(5, 10, -3)
+sigma &lt;- list(1, 5, 10)
+map2(mu, sigma, rnorm, n = 5) %&gt;% str()
+```
+
+```
+## List of 3
+##  $ : num [1:5] 6.13 2.87 3.2 6.37 5.41
+##  $ : num [1:5] 0.469 4.769 8.522 12.915 10.673
+##  $ : num [1:5] 19.39 -6.98 -1.89 -1.9 13.45
+```
+
+![](figs/map2.png)
+
+---
+
+##  More than 2 inputs, use `pmap`
+
+e.g. same problem as previous, but now n varies in each set.  
+
+
+```r
+n &lt;- list(1, 3, 5)
+mu &lt;- list(5, 10, -3)
+sigma &lt;- list(1, 5, 10)
+
+args1 &lt;- list(mean = mu, sd = sigma, n = n)
+args1 %&gt;%
+* pmap(rnorm) %&gt;%
+  str()
+```
+
+```
+## List of 3
+##  $ : num 6.39
+##  $ : num [1:3] 9.11 8.42 12.7
+##  $ : num [1:5] 3.75 -10.76 10.33 -2.63 -19.18
+```
+
+Safest to use named arguments with `pmap`, as it will do positional matching if not.  
+
+![](figs/pmap.png)
+
+---
+
+## Debugging using `safely`
+
+Handling errors can be tricky to diagnose with map.  
+It's not as obvious when things break.  
+
+Can use `safely()`. e.g.  
+
+
+```r
+*safe_log &lt;- safely(log, otherwise = NA_real_)
+#safe_log return a NA if log() returns error, plus error msg.  
+list("a", 10, 100) %&gt;%
+* map(safe_log) %&gt;%
+  transpose() %&gt;%
+  simplify_all()
+```
+
+```
+## $result
+## [1]       NA 2.302585 4.605170
+## 
+## $error
+## $error[[1]]
+## &lt;simpleError in .Primitive("log")(x, base): non-numeric argument to mathematical function&gt;
+## 
+## $error[[2]]
+## NULL
+## 
+## $error[[3]]
+## NULL
+```
+
+---
+
+## `accumulate()`
+
+We sometimes like to use the output of one iteration as input to the next.  
+
+e.g. model population dynamics over time, iterated function is annual population update.  
+
+`\(N_{t+1} = \lambda N_{t} - h_{t}\)`
+
+Can achieve this using `accumulate()`.  
+
+&lt;img src="figs/accumulate.png" width="80%" /&gt;
+
+---
+
+## `accumulate()`
+
+We sometimes like to use the output of one iteration as input to the next.  
+
+e.g. model population dynamics over time, iterated function is annual population update.  
+
+`\(N_{t+1} = \lambda N_{t} - h_{t}\)`
+
+Can achieve this using `accumulate()`.  
+
+
+```r
+pop_update &lt;- function(N, h=0, lambda = 1.05) lambda*N - h
+h &lt;- rep(10,10)
+initN &lt;- 100
+accumulate(h, pop_update, .init = initN, lambda = 1.05)
+```
+
+```
+##  [1] 100.00000  95.00000  89.75000  84.23750  78.44938  72.37184  65.99044
+##  [8]  59.28996  52.25446  44.86718  37.11054
+```
+
+
+```r
+accumulate(letters[1:10], paste, sep = "+")
+```
+
+```
+##  [1] "a"                   "a+b"                 "a+b+c"              
+##  [4] "a+b+c+d"             "a+b+c+d+e"           "a+b+c+d+e+f"        
+##  [7] "a+b+c+d+e+f+g"       "a+b+c+d+e+f+g+h"     "a+b+c+d+e+f+g+h+i"  
+## [10] "a+b+c+d+e+f+g+h+i+j"
+```
+
+---
+
+## Crab example, switch to RStudio
+
+We have data from several years of crab surveys.  
+
+The data for each year is contained in separate ".csv" files.  
+
+We would like to read these data into R, and combine them into a single data frame so we can inspect and plot them.  
+
+---
+
+
+```r
+files &lt;- dir(path = "data/crabs", 
+             pattern = "*.csv", 
+             full.names = TRUE)
+files
+```
+
+```
+FALSE  [1] "data/crabs/CRABS_2001.csv" "data/crabs/CRABS_2002.csv"
+FALSE  [3] "data/crabs/CRABS_2003.csv" "data/crabs/CRABS_2004.csv"
+FALSE  [5] "data/crabs/CRABS_2005.csv" "data/crabs/CRABS_2006.csv"
+FALSE  [7] "data/crabs/CRABS_2007.csv" "data/crabs/CRABS_2008.csv"
+FALSE  [9] "data/crabs/CRABS_2009.csv" "data/crabs/CRABS_2010.csv"
+FALSE [11] "data/crabs/CRABS_2011.csv" "data/crabs/CRABS_2012.csv"
+FALSE [13] "data/crabs/CRABS_2013.csv" "data/crabs/CRABS_2014.csv"
+FALSE [15] "data/crabs/CRABS_2015.csv" "data/crabs/CRABS_2016.csv"
+FALSE [17] "data/crabs/CRABS_2017.csv" "data/crabs/CRABS_2018.csv"
+FALSE [19] "data/crabs/CRABS_2019.csv"
+```
+
+---
+
+
+```r
+files &lt;- dir(path = "data/crabs", 
+             pattern = "*.csv", 
+             full.names = TRUE)
+#files
+crab_data &lt;- map_df(files, read_csv) %&gt;% 
+  group_by(year, site) %&gt;%
+  I()
+crab_data
+```
+
+```
+FALSE # A tibble: 1,846 x 7
+FALSE # Groups:   year, site [247]
+FALSE     year  site month moon_phase      temperature cancer carcinus
+FALSE  * &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt;  &lt;dbl&gt;    &lt;dbl&gt;
+FALSE  1  2001     4     8 Waning crescent        81.4  66.8      79.7
+FALSE  2  2001     4     7 Last quarter           66.1  42.6      89.5
+FALSE  3  2001     4     7 Waxing crescent        79    25.3      64.1
+FALSE  4  2001     4     7 New                    76.6  18.3      58.7
+FALSE  5  2001     1     8 Full                   77.4  59.7      76.1
+FALSE  6  2001     1     7 First quarter          65.9  96.6      30.0
+FALSE  7  2001     1     8 Waxing gibbous         77.3  70.5      39.1
+FALSE  8  2001     1     9 New                    74.6   1.21     82.1
+FALSE  9  2001     1     6 Full                   68.1   0.51     33.3
+FALSE 10  2001     1     6 Last quarter           68.5  36.8      46.8
+FALSE # … with 1,836 more rows
+```
+
+---
+
+.pull-left[
+
+```r
+files &lt;- dir(path = "data/crabs", 
+             pattern = "*.csv", 
+             full.names = TRUE)
+#files
+crab_data &lt;- map_df(files, read_csv) %&gt;% 
+  group_by(year, site) %&gt;%
+  I()
+#crab_data
+crab_plot &lt;- ggplot(crab_data) +
+  aes(x = carcinus, 
+      y = cancer, 
+      group = site) +
+  geom_point() +
+  facet_wrap(~site) +
+  theme_minimal() +
+  NULL
+crab_plot
+```
+]
+
+--
+
+.pull-right[
+![](purrr-slides_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+]
+
+
+
+---
+
+## Problem 2  
+
+We have data on Steller sea lion pup counts over time at a bunch of rookeries in Alaska.  
+
+&lt;img src="figs/Slide5.png" width="60%" /&gt;
+
+The number of data points for each rookery is not the same.  
+
+We want to investigate the annual trend in counts for each rookery.  
+We want to plot the slopes of the regressions using a histogram.  
+We want to obtain confidence intervals of the slope estimates using bootstrapping.  
+
+
+&lt;!-- --- --&gt;
+
+&lt;!-- ```{r} --&gt;
+
+&lt;!-- ssl &lt;- read_csv("data/SSLpupcounts.csv") --&gt;
+&lt;!-- ssl --&gt;
+&lt;!-- ssl_long &lt;- ssl %&gt;%  --&gt;
+&lt;!--   pivot_longer(names_to = "year", --&gt;
+&lt;!--                values_to = "count", --&gt;
+&lt;!--                -sitename) %&gt;%  --&gt;
+&lt;!--   na.omit() --&gt;
+&lt;!-- ssl_long --&gt;
+
+&lt;!-- ssl_models &lt;- ssl_long %&gt;%  --&gt;
+&lt;!--   group_by(sitename) %&gt;%  --&gt;
+&lt;!--   filter(count &gt; 0, --&gt;
+&lt;!--          year &gt;= 2000) %&gt;%  --&gt;
+&lt;!--   mutate(year2 = as.numeric(year)-2000, --&gt;
+&lt;!--          log_count = log(count)) %&gt;%  --&gt;
+&lt;!--   nest() %&gt;%  --&gt;
+&lt;!-- #str(ssl_models$data[1]) --&gt;
+&lt;!--   mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %&gt;%  --&gt;
+&lt;!--   mutate(coef = map(model, coef), --&gt;
+&lt;!--          slope = map_dbl(coef, pluck, 2)) %&gt;% --&gt;
+&lt;!--   I() --&gt;
+&lt;!-- ssl_models %&gt;%  --&gt;
+&lt;!--   ggplot() + --&gt;
+&lt;!--   aes(x = fct_reorder(sitename, slope), y = slope) + --&gt;
+&lt;!--   geom_point() + --&gt;
+&lt;!--   coord_flip() + --&gt;
+&lt;!--   NULL --&gt;
+
+&lt;!-- ``` --&gt;
+
+&lt;!-- ```{r} --&gt;
+&lt;!-- system.time({ --&gt;
+&lt;!-- nboot &lt;- 100 --&gt;
+&lt;!-- ssl_boot &lt;- ssl_models %&gt;% --&gt;
+&lt;!--   mutate(tbl = map(model, augment)) %&gt;%  --&gt;
+&lt;!-- #bob &lt;- ssl_boot %&gt;%  --&gt;
+&lt;!--   mutate(boot = map(tbl, specify, response = .resid)) %&gt;%  --&gt;
+&lt;!--   mutate(samples = map(boot, generate, reps = nboot, type = "bootstrap")) %&gt;%  --&gt;
+&lt;!--   mutate(nd2 = map(tbl, ~map_dfr(.x = seq_len(nboot),function(x) I(.))), --&gt;
+&lt;!--          nd2 = map(nd2, select,-.resid), --&gt;
+&lt;!--          nd2 = map2(nd2, samples, bind_cols), --&gt;
+&lt;!--          nd2 = map(nd2, mutate, log_count = .fitted + .resid), --&gt;
+&lt;!--          nd3 = map(nd2, function(x) {group_by(x, replicate) %&gt;% nest()})) %&gt;%  --&gt;
+&lt;!--   mutate(bootmod = map(nd3, ~mutate(., slope = map_dbl(data, ~coef(lm(log_count~year2, data = .))[2]))), --&gt;
+&lt;!--          quantboot = map(bootmod, ~quantile(.$slope, probs=c(0.025,0.5,0.975)))) %&gt;% --&gt;
+&lt;!--   unnest(quantboot) %&gt;%  --&gt;
+&lt;!--   mutate(quant = c("lower","med","upper")) %&gt;%  --&gt;
+&lt;!--   pivot_wider(names_from = quant, --&gt;
+&lt;!--               values_from = quantboot) %&gt;%  --&gt;
+&lt;!--   I() --&gt;
+
+&lt;!-- p1 &lt;- ggplot(ssl_boot) + --&gt;
+&lt;!--   aes(x = fct_reorder(sitename, med), y = med) + --&gt;
+&lt;!--   geom_point() + --&gt;
+&lt;!--   geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) + --&gt;
+&lt;!--   coord_flip() + --&gt;
+&lt;!--   theme_minimal() + --&gt;
+&lt;!--   labs(y = "slope", --&gt;
+&lt;!--        x = "") + --&gt;
+&lt;!--   NULL}) --&gt;
+&lt;!-- p1 --&gt;
+&lt;!-- ``` --&gt;
+
+
+
+---
+
+## Problem 3  
+
+We are interested in creating a standardized time series of CPUE for a fishery, by 'removing' the effect of variables that affect catch rates such that we have an index of abundance.  
+
+We have many possible variables.  
+
+We would like to compare models that use different combinations of these variables.  
+
+&lt;!-- --- --&gt;
+
+&lt;!-- ```{r} --&gt;
+
+&lt;!-- bsb &lt;- read_csv("data/neus_bts.csv") %&gt;%  --&gt;
+&lt;!--   filter(comname == "BLACK SEA BASS", --&gt;
+&lt;!--          biomass &gt; 0, --&gt;
+&lt;!--          season == "SPRING") --&gt;
+&lt;!-- bsb --&gt;
+
+&lt;!-- terms &lt;- rev(names(bsb)[c(5:8)]) --&gt;
+&lt;!-- parts &lt;- str_c("s(",terms,")") --&gt;
+&lt;!-- forms &lt;- map(accumulate(parts, paste, sep = " + ", .init = "log(biomass) ~ factor(year)"), as.formula) --&gt;
+
+&lt;!-- bsb_gams &lt;- enframe(forms, name = "id", value = "formula") %&gt;% --&gt;
+&lt;!--   mutate(model = modelr::fit_with(bsb, mgcv::gam, .formulas = forms), --&gt;
+&lt;!--          aic = map_dbl(model, AIC), --&gt;
+&lt;!--          p1 = map(model, gratia::draw)) --&gt;
+&lt;!-- bsb_gams2 &lt;- bsb_gams %&gt;%  --&gt;
+&lt;!--   slice(which.min(bsb_gams$aic)) %&gt;%  --&gt;
+&lt;!--   #mutate(p1 = map(model, gratia::draw)) %&gt;%  --&gt;
+&lt;!--   #print(p1) %&gt;%  --&gt;
+&lt;!--   I() --&gt;
+&lt;!-- print(bsb_gams2$p1) --&gt;
+&lt;!-- ``` --&gt;
+
+
+## Problem 4
+
+Status for endangered species are often based on a risk evaluation of population projections.  
+
+We want to project population dynamics forward in time given uncertainty in future dynamics.  
+
+We want to do this lots of times to quantify the risk of extinction.  
+
+
+&lt;!-- ```{r} --&gt;
+&lt;!-- nsim &lt;- 10 --&gt;
+&lt;!-- nyr &lt;- 100 --&gt;
+&lt;!-- sd_proc &lt;- 0.1 --&gt;
+&lt;!-- errors &lt;- map(seq_len(nsim), ~rnorm(nyr,0,sd_proc)) --&gt;
+&lt;!-- pop_update &lt;- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err) --&gt;
+&lt;!-- h &lt;- rep(10,10) --&gt;
+&lt;!-- initN &lt;- 7500 --&gt;
+&lt;!-- pop2 &lt;- map(errors,~accumulate(., pop_update, .init = initN, lambda = 1.05)) --&gt;
+&lt;!-- ``` --&gt;
+
+&lt;!-- If there are 7,500 snow leopards in year 2018 and they are declining at 5% per year, in what year will they fall below 500 individuals? --&gt;
+
+&lt;!-- ```{r prompt=TRUE,comment='',collapse=TRUE} --&gt;
+&lt;!-- leopard.loop &lt;- function(N, year=2018) { --&gt;
+&lt;!--   while (N&gt;=500) { --&gt;
+&lt;!--     N &lt;- N*0.95 --&gt;
+&lt;!--     year &lt;- year+1 --&gt;
+&lt;!--   } --&gt;
+&lt;!--   return(year) --&gt;
+&lt;!-- } --&gt;
+&lt;!-- leopard.loop(N=7500) --&gt;
+&lt;!-- ``` --&gt;
+
+&lt;!-- Pro-tip: when you end up in an infinite loop with no stopping point, press `&lt;ESC&gt;` to stop it running! --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"countIncrementalSlides": false,
+"highlightLines": true,
+"highlightStyle": "github"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
