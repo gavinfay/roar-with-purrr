@@ -431,7 +431,8 @@ We have many possible variables.
 
 We would like to compare models that use different combinations of these variables.  
 
-
+Let's look at spring survey data for black sea bass.  
+We'll fit a few GAMs of catch per tow with different numbers of covariates.  
 ```{r}
 bsb <- read_csv("data/neus_bts.csv") %>% 
   filter(comname == "BLACK SEA BASS",
@@ -439,18 +440,18 @@ bsb <- read_csv("data/neus_bts.csv") %>%
          season == "SPRING")
 bsb
 
+# make a list of model formulae using accumulate
 terms <- rev(names(bsb)[c(5:8)])
 parts <- str_c("s(",terms,")")
 forms <- map(accumulate(parts, paste, sep = " + ", .init = "log(biomass) ~ factor(year)"), as.formula)
 
+#use modelr::fitwith to fit the gam function for each of the model formulae
 bsb_gams <- enframe(forms, name = "id", value = "formula") %>%
   mutate(model = modelr::fit_with(bsb, mgcv::gam, .formulas = forms),
          aic = map_dbl(model, AIC),
          p1 = map(model, gratia::draw))
 bsb_gams2 <- bsb_gams %>% 
   slice(which.min(bsb_gams$aic)) %>% 
-  #mutate(p1 = map(model, gratia::draw)) %>% 
-  #print(p1) %>% 
   I()
 print(bsb_gams2$p1)
 
