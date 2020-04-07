@@ -366,15 +366,20 @@ ggplot(ssl_models) +
 
 ## residual bootstrapping
 
+resample residuals from the original models to obtain bootstrapped confidence intervals of the slopes.  
+
 ```{r}
 #system.time({
 nboot <- 100
+# first extract a table of fitted values and residuals using augment
 ssl_boot <- ssl_models %>%
   mutate(tbl = map(model, broom::augment)) %>% 
   select(sitename, tbl) %>% 
   unnest(cols=c(tbl)) %>% 
   rename("resid" = ".resid") %>% 
   I()
+# we'll do resampling from the residuals for each year within each rookery
+# rather than getting complicated with nested lists, we'll use sample_frac() to do the resamples
 tosample <- ssl_boot %>% 
   select(sitename, resid) %>% 
   group_by(sitename)
@@ -383,18 +388,22 @@ resamples <-
    ungroup() %>% 
    mutate(replicate = rep(1:nboot, each = nrow(tosample)))
 resamples
-ssl_boot
+```
+`resamples` contains our bootstraps.
+Let's append them to the data frame so we can compute the new data and re-fit the models for each case.  
+
+```{r}
 ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
   select(-resid) %>% 
   bind_cols(resamples) %>% 
   mutate(log_count = .fitted + resid) %>% 
   group_by(sitename, replicate) %>% 
-  nest() %>% 
-  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% 
+  nest() %>%  # now have a data frame with a row for each site & replicate
+  mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>%  #same code as before to run the models
   mutate(coef = map(model, coef)) %>% 
   mutate(slope = map_dbl(coef, pluck, 2)) %>% 
     ungroup() %>% 
-  group_by(sitename) %>% 
+  group_by(sitename) %>% #pull out summaries of the distribution for the slope estimates for plotting
   mutate(med = median(slope),
          lower = quantile(slope, 0.025),
          upper = quantile(slope, 0.975)) %>% 
