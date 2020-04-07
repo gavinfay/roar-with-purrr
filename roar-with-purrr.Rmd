@@ -389,8 +389,11 @@ ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
   bind_cols(resamples) %>% 
   mutate(log_count = .fitted + resid) 
   
-ssl_bootmod %>% 
-  group_by(sitename, replicate)
+ssl_bootmod <- ssl_bootmod %>% 
+  group_by(sitename, replicate) %>% 
+  nest()
+ssl_bootmod
+
 
 ```
 
