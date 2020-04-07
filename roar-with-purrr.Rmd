@@ -343,7 +343,7 @@ ssl_models <- ssl_long %>%
 #ssl_models 
   group_by(sitename) %>% 
   nest()
-  
+ssl_models  
 
 
   lm(log_count ~ year2, data = ssl_models)
