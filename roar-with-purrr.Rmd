@@ -399,7 +399,7 @@ ssl_bootmod
 
 ggplot(ssl_bootmod) +
   aes(x = fct_reorder(sitename, median(slope)), y= slope) +
-  geom_point() +
+  geom_boxplot() +
   coord_flip() +
   theme_minimal()
 
