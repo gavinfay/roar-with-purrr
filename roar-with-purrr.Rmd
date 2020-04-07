@@ -480,6 +480,7 @@ pop_update <- function(N, proc_err, lambda = 1.05) lambda*N*exp(proc_err)
 
 # population projection for each time series of process errors
 pop2 <- map(errors,~accumulate(., pop_update, .init = initN, lambda = 1.05)) %>% 
+   %>% 
   mutate(year = rep(1:101, times = nsim))
 pop2
 ```
