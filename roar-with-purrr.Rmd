@@ -393,15 +393,23 @@ ssl_bootmod <- map_dfr(seq_len(nboot), ~I(ssl_boot)) %>%
   mutate(model = map(data, ~lm(log_count ~ year2, data = .))) %>% 
   mutate(coef = map(model, coef)) %>% 
   mutate(slope = map_dbl(coef, pluck, 2)) %>% 
+    ungroup() %>% 
+  group_by(sitename) %>% 
+  mutate(med = median(slope),
+         lower = quantile(slope, 0.025),
+         upper = quantile(slope, 0.975)) %>% 
   I()
 
-ssl_bootmod
-
-ggplot(ssl_bootmod) +
-  aes(x = fct_reorder(sitename, median(slope)), y= slope) +
-  geom_boxplot() +
+p1 <- ggplot(ssl_bootmod) +
+  aes(x = fct_reorder(sitename, med), y = med) +
+  geom_point() +
+  geom_errorbar(aes(ymin=lower, ymax=upper), width= 0.2) +
   coord_flip() +
-  theme_minimal()
+  theme_minimal() +
+  labs(y = "slope",
+       x = "") +
+  NULL #})
+p1
 
 
 
