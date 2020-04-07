@@ -288,10 +288,10 @@ files <- dir(path = "data/crabs",
              pattern = "*.csv", 
              full.names = TRUE)
 #files
-crab_data <- map(files, read_csv) %>% 
+crab_data <- map_df(files, read_csv) %>% 
   group_by(year, site) %>%
   I()
-#str(crab_data)
+#crab_data
 crab_plot <- ggplot(crab_data) +
   aes(x = carcinus, 
       y = cancer, 
