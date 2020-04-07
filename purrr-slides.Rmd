@@ -44,7 +44,7 @@ background-size: 10%
 ## Make your R roar with `purrr`
 
 Google Doc containing links to today's resources:  
-[bit.ly/roar-with-purrr]("bit.ly/roar-with-purrr")
+[link was here]("roar-with-purrr")
 
 Add your name to attendance.  
 
