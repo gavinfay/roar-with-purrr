@@ -808,6 +808,7 @@ p1
 
 .pull-right[
 ```{r ref.label= 'boot1', echo = FALSE, retina = 3, message= FALSE}
+p1
 ```
 ]
 
